@@ -1,12 +1,12 @@
 import React, { useState } from 'react';
-import {   Eye, EyeOff, Layout } from 'lucide-react';
+import {   Eye, EyeOff } from 'lucide-react';
 import { Card, CardHeader, CardContent } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { UseAuth } from '@/context/AuthContext';
 import { GoogleLogin, CredentialResponse } from '@react-oauth/google';
 import { jwtDecode } from 'jwt-decode';
 import { User } from '@/types';
-
+import Layout from '../Layout/Layout';
 
 interface FormElements extends HTMLFormControlsCollection {
   firstName: HTMLInputElement;

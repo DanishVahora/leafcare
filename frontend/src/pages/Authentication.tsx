@@ -7,7 +7,7 @@ import { UseAuth } from '../context/AuthContext';
 import { GoogleLogin, CredentialResponse } from '@react-oauth/google';
 import { jwtDecode } from 'jwt-decode';
 import { User } from './types';
-import Layout from '../Routes/Layout';
+import Layout from '../Layout/Layout';
 
 interface FormElements extends HTMLFormControlsCollection {
     email: HTMLInputElement;
@@ -135,7 +135,7 @@ const Authentication = () => {
     
                 <p className="text-center text-sm text-gray-500">
                   Don't have an account?{' '}
-                  <a href="#" className="font-medium text-green-600 hover:text-green-500">
+                  <a href="/signup" className="font-medium text-green-600 hover:text-green-500">
                     Sign up
                   </a>
                 </p>

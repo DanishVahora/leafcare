@@ -1,6 +1,6 @@
 import React from 'react';
 import { ArrowRight, Shield, Upload, FileSearch } from 'lucide-react';
-import Layout from '../Routes/Layout';
+import Layout from '../Layout/Layout';
 export default function HomePage() {
   return (
     
