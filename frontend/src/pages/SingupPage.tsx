@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Leaf, ArrowLeft, Eye, EyeOff } from 'lucide-react';
+import {   Eye, EyeOff, Layout } from 'lucide-react';
 import { Card, CardHeader, CardContent } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { UseAuth } from '@/context/AuthContext';
@@ -50,27 +50,12 @@ export default function SignupPage() {
     // Implement your email sign up logic here
   };
   return (
-    <div className="min-h-screen bg-gradient-to-br from-green-50 via-green-100/50 to-white flex flex-col">
-      {/* Navigation */}
-      <nav className="border-b bg-white/50 backdrop-blur-sm">
-        <div className="container mx-auto px-6 py-3">
-          <div className="flex items-center gap-2">
-            <Leaf className="h-5 w-5 text-green-600" />
-            <span className="text-lg font-semibold text-green-800">PlantCare</span>
-          </div>
-        </div>
-      </nav>
-
+    <Layout showFullMenu={false}>
       {/* Main Content */}
       <div className="flex-1 flex items-center justify-center px-6 py-12">
         <Card className="w-full max-w-md">
           <CardHeader className="space-y-1 text-center">
-            <button 
-              onClick={() => window.history.back()} 
-              className="absolute left-4 top-4 text-gray-500 hover:text-gray-700"
-            >
-              <ArrowLeft className="h-5 w-5" />
-            </button>
+            
             <h2 className="text-2xl font-semibold tracking-tight">Create an account</h2>
             <p className="text-sm text-gray-500">
               Get started with PlantCare
@@ -222,6 +207,6 @@ export default function SignupPage() {
           </CardContent>
         </Card>
       </div>
-    </div>
+    </Layout>
   );
 }

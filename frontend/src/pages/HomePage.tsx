@@ -1,29 +1,10 @@
 import React from 'react';
-import { ArrowRight, Leaf, Shield, Upload, FileSearch } from 'lucide-react';
-
+import { ArrowRight, Shield, Upload, FileSearch } from 'lucide-react';
+import Layout from '../Routes/Layout';
 export default function HomePage() {
   return (
-    <div className="minh-screen bg-gradient-to-br from-green-50 via-green-100/50 to-white">
-      {/* Navigation Bar */}
-      <nav className="border-b bg-white/50 backdrop-blur-sm">
-        <div className="container mx-auto px-6 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <Leaf className="h-6 w-6 text-green-600" />
-              <span className="text-xl font-semibold text-green-800">PlantCare</span>
-            </div>
-            <div className="flex items-center gap-6">
-              <a href="#" className="text-gray-600 hover:text-green-600 transition-colors">About</a>
-              <a href="#" className="text-gray-600 hover:text-green-600 transition-colors">Features</a>
-              <a href="#" className="text-gray-600 hover:text-green-600 transition-colors">Contact</a>
-              <button className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors">
-                Sign In
-              </button>
-            </div>
-          </div>
-        </div>
-      </nav>
-
+    
+    <Layout>
       {/* Hero Section */}
       <div className="container mx-auto px-6 py-4">
         <div className="flex flex-col md:flex-row items-center justify-center gap-y-36">
@@ -109,6 +90,6 @@ export default function HomePage() {
           </div>
         </div>
       </div>
-    </div>
+      </Layout>
   );
 }
