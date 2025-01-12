@@ -13,7 +13,7 @@ export const Navbar: React.FC<NavbarProps> = ({ showFullMenu = true }) => {
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Leaf className="h-6 w-6 text-green-600" />
-            <span className="text-xl font-semibold text-green-800">PlantCare</span>
+            <a href='/' className="text-xl font-semibold text-green-800">PlantCare</a>
           </div>
           {showFullMenu && (
             <div className="flex items-center gap-6">
