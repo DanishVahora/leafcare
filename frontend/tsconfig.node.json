@@ -5,6 +5,10 @@
     "lib": ["ES2023"],
     "module": "ESNext",
     "skipLibCheck": true,
+    "baseUrl": ".",
+    "paths": {
+      "@/types": ["src/types"]
+    },
 
     /* Bundler mode */
     "moduleResolution": "bundler",
