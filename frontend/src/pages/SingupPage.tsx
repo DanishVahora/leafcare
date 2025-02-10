@@ -24,12 +24,31 @@ export default function SignupPage() {
   const [showPassword, setShowPassword] = useState<boolean>(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState<boolean>(false);
 
-  const handleGoogleSuccess = (credentialResponse: CredentialResponse) => {
+  const handleGoogleSuccess = async (credentialResponse: CredentialResponse) => {
     if (credentialResponse.credential) {
       const decoded = jwtDecode<User>(credentialResponse.credential);
-      login(decoded);
-      // You can also send this token to your backend for verification
-      console.log('Google Sign Up Success:', decoded);
+      
+      try {
+        // Send Google OAuth data to backend
+        const response = await axios.post('http://localhost:5000/api/auth/oauth/login', {
+          provider: 'google',
+          providerId: decoded.sub,
+          email: decoded.email,
+          firstName: decoded.given_name,
+          lastName: decoded.family_name,
+          photo: decoded.picture,
+          accessToken: credentialResponse.credential
+        });
+
+        // Handle successful login
+        const { token, user } = response.data;
+        localStorage.setItem('authToken', token);
+        login(user);
+        navigate('/dashboard');
+      } catch (error) {
+        console.error('Google OAuth login failed:', error);
+        setError('Failed to authenticate with Google');
+      }
     }
   };
 

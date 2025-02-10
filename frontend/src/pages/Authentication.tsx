@@ -1,6 +1,5 @@
-import React from 'react'
+import React, { useState } from 'react'
 import { Card, CardHeader, CardContent } from '../components/ui/card';
-// import { Button } from '@/components/ui/button';
 import { Separator } from '../components/ui/separator';
 import { UseAuth } from '../context/AuthContext';
 import { GoogleLogin, CredentialResponse } from '@react-oauth/google';
@@ -8,61 +7,76 @@ import { jwtDecode } from 'jwt-decode';
 import { User } from './types';
 import Layout from '../Layout/Layout';
 import axios from 'axios';
-const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
+import { useNavigate } from 'react-router-dom';
 
 interface FormElements extends HTMLFormControlsCollection {
-    email: HTMLInputElement;
-    password: HTMLInputElement;
-  }
-  
-  interface SignInFormElement extends HTMLFormElement {
-    readonly elements: FormElements;
-  }
+  email: HTMLInputElement;
+  password: HTMLInputElement;
+}
 
-  
+interface SignInFormElement extends HTMLFormElement {
+  readonly elements: FormElements;
+}
+
 const Authentication = () => {
-    const { login } = UseAuth();
-  
-    const handleGoogleSuccess = (credentialResponse: CredentialResponse) => {
-      if (credentialResponse.credential) {
-        const decoded = jwtDecode<User>(credentialResponse.credential);
-        login(decoded);
-        // You can also send this token to your backend for verification
-        console.log('Google Sign In Success:', decoded);
-      }
-    };
-  
-    const handleGoogleError = () => {
-      console.error('Google Sign In Failed');
-    };
+  const { login } = UseAuth();
+  const navigate = useNavigate();
+  const [error, setError] = useState<string>('');
 
-    const handleEmailSignIn = async (e: React.FormEvent<SignInFormElement>) => {
-      e.preventDefault();
-      const form = e.currentTarget;
-      const email = form.elements.email.value;
-      const password = form.elements.password.value;
-    
+  const handleGoogleSuccess = async (credentialResponse: CredentialResponse) => {
+    if (credentialResponse.credential) {
+      const decoded = jwtDecode<User>(credentialResponse.credential);
+      
       try {
-        const response = await axios.post('http://localhost:5000/api/auth/login', {
-          email,
-          password,
+        // Send Google OAuth data to backend
+        const response = await axios.post('http://localhost:5000/api/auth/oauth/login', {
+          provider: 'google',
+          providerId: decoded.sub,
+          email: decoded.email,
+          firstName: decoded.given_name,
+          lastName: decoded.family_name,
+          photo: decoded.picture,
+          accessToken: credentialResponse.credential
         });
-    
-        // Ensure the token is received from the backend
-        const { token, user } = response.data; 
-        if (!token) {
-          throw new Error("Token not received from backend");
-        }
-    
-        // Save token in local storage or context
+
+        // Handle successful login
+        const { token, user } = response.data;
         localStorage.setItem('authToken', token);
-        login(user); // Assuming `login` updates the AuthContext
-    
-        console.log('Login successful:', user);
+        login(user);
+        navigate('/dashboard');
       } catch (error) {
-        console.error('Login failed:', error);
+        console.error('Google OAuth login failed:', error);
+        setError('Failed to authenticate with Google');
       }
-    };
+    }
+  };
+
+  const handleEmailSignIn = async (e: React.FormEvent<SignInFormElement>) => {
+    e.preventDefault();
+    setError('');
+    
+    const form = e.currentTarget;
+    const email = form.elements.email.value;
+    const password = form.elements.password.value;
+
+    try {
+      const response = await axios.post('http://localhost:5000/api/auth/login', {
+        email,
+        password,
+      });
+
+      const { token, user } = response.data;
+      if (!token) {
+        throw new Error("Token not received from backend");
+      }
+
+      localStorage.setItem('authToken', token);
+      login(user);
+    } catch (error: any) {
+      console.error('Login failed:', error);
+      setError(error.response?.data?.message || 'Invalid email or password');
+    }
+  };
     
 
       
@@ -80,12 +94,16 @@ const Authentication = () => {
                 </p>
               </CardHeader>
               <CardContent className="space-y-4">
+            {error && (
+              <div className="p-3 text-sm text-red-600 bg-red-50 rounded-lg">
+                {error}
+              </div>
+            )}
                 {/* Google Sign In Button */}
                 <div className="w-full flex justify-center">
               <GoogleLogin
-                clientId = {googleClientId}
                 onSuccess={handleGoogleSuccess}
-                onError={handleGoogleError}
+                onError={() => setError('Google sign in failed')}
                 theme="outline"
                 size="large"
                 type="standard"

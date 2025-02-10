@@ -4,6 +4,9 @@ const cors = require('cors');
 const bodyParser = require('body-parser');
 const connectDB = require('./config/db');
 const authRoutes = require('./routes/authRoutes');
+const helmet = require("helmet");
+
+
 
 // Load env vars
 
@@ -16,7 +19,20 @@ connectDB();
 const app = express();
 
 // Middleware
-app.use(cors());
+
+
+app.use(cors({
+  origin: ["http://localhost:3000", "http://localhost:5173"], // Allow both ports
+  credentials: true, 
+  allowedHeaders: ["Content-Type", "Authorization"],
+  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"]
+}));
+app.use(
+    helmet({
+      crossOriginOpenerPolicy: { policy: "same-origin-allow-popups" }, // Allow popups
+      crossOriginEmbedderPolicy: false // Disable to prevent iframe issues
+    })
+  );
 app.use(bodyParser.json());
 
 // Routes
