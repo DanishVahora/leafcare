@@ -22,13 +22,11 @@ const Authentication = () => {
   const { login } = UseAuth();
   const navigate = useNavigate();
   const [error, setError] = useState<string>('');
-
   const handleGoogleSuccess = async (credentialResponse: CredentialResponse) => {
     if (credentialResponse.credential) {
       const decoded = jwtDecode<User>(credentialResponse.credential);
-      
+  
       try {
-        // Send Google OAuth data to backend
         const response = await axios.post('http://localhost:5000/api/auth/oauth/login', {
           provider: 'google',
           providerId: decoded.sub,
@@ -38,11 +36,10 @@ const Authentication = () => {
           photo: decoded.picture,
           accessToken: credentialResponse.credential
         });
-
-        // Handle successful login
+  
         const { token, user } = response.data;
-        localStorage.setItem('authToken', token);
         login(user);
+        localStorage.setItem("token", token); // Save token
         navigate('/dashboard');
       } catch (error) {
         console.error('Google OAuth login failed:', error);
@@ -50,34 +47,37 @@ const Authentication = () => {
       }
     }
   };
-
+  
+  
   const handleEmailSignIn = async (e: React.FormEvent<SignInFormElement>) => {
     e.preventDefault();
     setError('');
-    
+  
     const form = e.currentTarget;
     const email = form.elements.email.value;
     const password = form.elements.password.value;
-
+  
     try {
       const response = await axios.post('http://localhost:5000/api/auth/login', {
         email,
         password,
       });
-
+  
       const { token, user } = response.data;
       if (!token) {
         throw new Error("Token not received from backend");
       }
-
-      localStorage.setItem('authToken', token);
+  
       login(user);
-    } catch (error: any) {
+      localStorage.setItem("token", token); // Save token
+      navigate('/dashboard');
+    } catch (error: string | number | boolean | null | undefined) {
       console.error('Login failed:', error);
       setError(error.response?.data?.message || 'Invalid email or password');
     }
   };
-    
+  
+  
 
       
       return (

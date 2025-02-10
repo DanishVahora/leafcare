@@ -74,7 +74,7 @@ export default function SignupPage() {
         const { user, token } = response.data;
   
         // Store the token (optional: in localStorage for persistence)
-        localStorage.setItem('authToken', token);
+        Cookies.set('authToken', token, { expires: 1, secure: true, sameSite: 'Strict' }); // Expires in 1 day
   
         // Log in the user
         login(user);
