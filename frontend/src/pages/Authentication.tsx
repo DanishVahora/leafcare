@@ -1,5 +1,4 @@
 import React from 'react'
-import {  ArrowLeft } from 'lucide-react';
 import { Card, CardHeader, CardContent } from '../components/ui/card';
 // import { Button } from '@/components/ui/button';
 import { Separator } from '../components/ui/separator';
@@ -8,6 +7,8 @@ import { GoogleLogin, CredentialResponse } from '@react-oauth/google';
 import { jwtDecode } from 'jwt-decode';
 import { User } from './types';
 import Layout from '../Layout/Layout';
+import axios from 'axios';
+const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
 
 interface FormElements extends HTMLFormControlsCollection {
     email: HTMLInputElement;
@@ -36,12 +37,33 @@ const Authentication = () => {
     };
 
     const handleEmailSignIn = async (e: React.FormEvent<SignInFormElement>) => {
-        e.preventDefault();
-        const form = e.currentTarget;
-        const email = form.elements.email.value;
-        const password = form.elements.password.value;
-        // Implement your email sign in logic here
-      };
+      e.preventDefault();
+      const form = e.currentTarget;
+      const email = form.elements.email.value;
+      const password = form.elements.password.value;
+    
+      try {
+        const response = await axios.post('http://localhost:5000/api/auth/login', {
+          email,
+          password,
+        });
+    
+        // Ensure the token is received from the backend
+        const { token, user } = response.data; 
+        if (!token) {
+          throw new Error("Token not received from backend");
+        }
+    
+        // Save token in local storage or context
+        localStorage.setItem('authToken', token);
+        login(user); // Assuming `login` updates the AuthContext
+    
+        console.log('Login successful:', user);
+      } catch (error) {
+        console.error('Login failed:', error);
+      }
+    };
+    
 
       
       return (
@@ -61,6 +83,7 @@ const Authentication = () => {
                 {/* Google Sign In Button */}
                 <div className="w-full flex justify-center">
               <GoogleLogin
+                clientId = {googleClientId}
                 onSuccess={handleGoogleSuccess}
                 onError={handleGoogleError}
                 theme="outline"

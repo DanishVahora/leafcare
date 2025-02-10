@@ -7,7 +7,7 @@ import { GoogleLogin, CredentialResponse } from '@react-oauth/google';
 import { jwtDecode } from 'jwt-decode';
 import { User } from '@/types';
 import Layout from '../Layout/Layout';
-
+import axios from 'axios';
 interface FormElements extends HTMLFormControlsCollection {
   firstName: HTMLInputElement;
   lastName: HTMLInputElement;
@@ -45,10 +45,28 @@ export default function SignupPage() {
       lastName: form.elements.lastName.value,
       email: form.elements.email.value,
       password: form.elements.password.value,
-      confirmPassword: form.elements.confirmPassword.value,
     };
-    // Implement your email sign up logic here
+  
+    try {
+      const response = await axios.post('http://localhost:5000/api/auth/signup', formData);
+  
+      if (response.status === 201) {
+        // Assuming the backend returns user details & token after signup
+        const { user, token } = response.data;
+  
+        // Store the token (optional: in localStorage for persistence)
+        localStorage.setItem('authToken', token);
+  
+        // Log in the user
+        login(user);
+  
+        console.log('Signup successful, user logged in:', user);
+      }
+    } catch (error) {
+      console.error('Signup failed:', error.response?.data || error.message);
+    }
   };
+  
   return (
     <Layout showFullMenu={false}>
       {/* Main Content */}

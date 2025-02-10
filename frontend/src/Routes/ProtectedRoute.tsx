@@ -4,11 +4,12 @@ import { Navigate } from 'react-router-dom';
 const ProtectedRoute = ({ children }) => {
     const { user } = UseAuth();
   
-    if (user) {
-      return <Navigate to="/dashboard" replace />;
+    if (!user) {
+      return <Navigate to="/auth" replace />;
     }
-  
     return <>{children}</>;
+
+    
 }
 
 export default ProtectedRoute

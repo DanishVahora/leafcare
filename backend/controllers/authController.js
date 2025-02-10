@@ -4,10 +4,11 @@ const { generateToken } = require('../utils/tokenUtils');
 // Controller function for signup
 exports.signup = async (req, res) => {
   try {
-    const { username, email, password } = req.body;
+    const { firstName,lastName, email, password } = req.body;
 
     // Validation (you can customize this)
-    if (!username || !email || !password) {
+    console.log(firstName,lastName, email, password);
+    if (!firstName||!lastName || !email || !password) {
       return res.status(400).json({ message: 'All fields are required' });
     }
 
@@ -18,7 +19,7 @@ exports.signup = async (req, res) => {
     }
 
     // Create a new user
-    const newUser = new User({ username, email, password });
+    const newUser = new User({ firstName,lastName, email, password });
     await newUser.save();
 
     res.status(201).json({ message: 'User created successfully', user: newUser });
