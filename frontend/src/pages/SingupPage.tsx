@@ -42,8 +42,8 @@ export default function SignupPage() {
 
         // Handle successful login
         const { token, user } = response.data;
-        localStorage.setItem('authToken', token);
         login(user);
+        localStorage.setItem("token", token);
         navigate('/dashboard');
       } catch (error) {
         console.error('Google OAuth login failed:', error);
@@ -74,10 +74,8 @@ export default function SignupPage() {
         const { user, token } = response.data;
   
         // Store the token (optional: in localStorage for persistence)
-        Cookies.set('authToken', token, { expires: 1, secure: true, sameSite: 'Strict' }); // Expires in 1 day
-  
-        // Log in the user
         login(user);
+      localStorage.setItem("token", token);
   
         console.log('Signup successful, user logged in:', user);
       }
