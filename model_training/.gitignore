@@ -3,4 +3,5 @@ Plant_Disease_Dataset/train/
 Plant_Disease_Dataset/valid/
 .ipynb_checkpoints/
 Plant_Disease_Dataset/.ipynb_checkpoints/
-Plant_Disease_Dataset/Untitled.ipynb/
+Plant_Disease_Dataset/trained_model.h5/
+Plant_Disease_Dataset/trained_model.keras/
