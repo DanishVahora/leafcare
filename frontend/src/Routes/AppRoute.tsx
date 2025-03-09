@@ -8,6 +8,7 @@ import PublicRoute from './PublicRoute';
 import Dashboard from '../pages/Dashboard';
 import PlantAnalyze from '../pages/PlantAnalyzer';
 import DetectionPage from '@/pages/DetectionPage';
+import SubscribePro from '@/pages/SubscribePro';
 
 export const AppRoute = () => {
   return (
@@ -39,13 +40,19 @@ export const AppRoute = () => {
         {/* Protected routes */}
         <Route path="/detect" element={
           // <ProtectedRoute>
-          <DetectionPage/>
+          <DetectionPage />
           // </ProtectedRoute>
         } />
 
         <Route path='/PlantAnalyze' element={
           // <ProtectedRoute>
           <PlantAnalyze />
+          // </ProtectedRoute>
+        } />
+
+        <Route path='/SubToPro' element={
+          // <ProtectedRoute>
+          <SubscribePro />
           // </ProtectedRoute>
         } />
 
