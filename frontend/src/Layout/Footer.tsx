@@ -10,7 +10,7 @@ export const Footer: React.FC = () => {
           <div className="space-y-4">
             <div className="flex items-center gap-2">
               <Leaf className="h-6 w-6 text-green-600" />
-              <span className="text-xl font-semibold text-green-800">PlantCare</span>
+              <span className="text-xl font-semibold text-green-800">LeafCare</span>
             </div>
             <p className="text-gray-600">
               Protecting your plants with AI-powered disease detection technology.

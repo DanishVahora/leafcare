@@ -75,9 +75,13 @@ const Authentication = () => {
       login(user);
       localStorage.setItem("token", token); // Save token
       navigate('/dashboard');
-    } catch (error: string | number | boolean | null | undefined) {
+    } catch (error: unknown) {
       console.error('Login failed:', error);
-      setError(error.response?.data?.message || 'Invalid email or password');
+      if (axios.isAxiosError(error) && error.response) {
+        setError(error.response.data?.message || 'Invalid email or password');
+      } else {
+        setError('An unexpected error occurred');
+      }
     }
   };
   

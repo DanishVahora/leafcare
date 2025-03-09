@@ -1,85 +1,237 @@
-import React, { useState } from 'react';
-import { Leaf, LogOut, User as UserIcon } from 'lucide-react';
-import { UseAuth } from '../context/AuthContext'; // Adjust the import path as needed
+import React, { useState, useEffect } from 'react';
+import { UseAuth } from '../context/AuthContext';
+import { motion, AnimatePresence } from 'framer-motion';
+import { 
+  Leaf,
+  Camera,
+  Clock,
+  Cpu,
+  BookOpen,
+  Users,
+  Settings,
+  LogOut,
+  User,
+  Menu,
+  X
+} from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 interface NavbarProps {
   showFullMenu?: boolean;
 }
 
+const NAV_LINKS = [
+  { name: 'Dashboard', path: '/dashboard', icon: Leaf },
+  { name: 'Detection', path: '/detect', icon: Camera },
+  { name: 'History', path: '/history', icon: Clock },
+  { name: 'Models', path: '/models', icon: Cpu },
+  { name: 'Docs', path: '/docs', icon: BookOpen },
+  { name: 'Community', path: '/community', icon: Users },
+  { name: 'Settings', path: '/settings', icon: Settings },
+];
+
 export const Navbar: React.FC<NavbarProps> = ({ showFullMenu = true }) => {
   const { user, logout } = UseAuth();
-  const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [isOpen, setIsOpen] = useState(false);
+  const [lastScroll, setLastScroll] = useState(0);
+  const [hidden, setHidden] = useState(false);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      const currentScroll = window.scrollY;
+      setHidden(currentScroll > lastScroll && currentScroll > 100);
+      setLastScroll(currentScroll);
+    };
+
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, [lastScroll]);
 
   return (
-    <nav className="border-b bg-white/50 backdrop-blur-sm">
-      <div className="container mx-auto px-6 py-4">
-        <div className="flex items-center justify-between">
+    <motion.nav
+      className={cn(
+        'fixed w-full top-0 z-50 bg-white/90 backdrop-blur-md border-b border-green-100',
+        'transition-transform duration-300 ease-out'
+      )}
+      animate={{ y: hidden ? -100 : 0 }}
+      transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+    >
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex items-center justify-between h-16">
           {/* Logo */}
-          <div className="flex items-center gap-2">
-            <Leaf className="h-6 w-6 text-green-600" />
-            <a href="/" className="text-xl font-semibold text-green-800">
-              PlantCare
-            </a>
-          </div>
+          <motion.a 
+            href="/" 
+            className="flex items-center space-x-2 group"
+            whileHover={{ scale: 1.05 }}
+          >
+            <div className="p-1.5 rounded-lg bg-gradient-to-tr from-green-600 to-emerald-600">
+              <Leaf className="h-6 w-6 text-white" />
+            </div>
+            <span className="text-xl font-bold bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent">
+              LeafCare
+            </span>
+          </motion.a>
 
           {showFullMenu && (
-            <div className="flex items-center gap-6">
-              <a href="#" className="text-gray-600 hover:text-green-600 transition-colors">
-                About
-              </a>
-              <a href="#" className="text-gray-600 hover:text-green-600 transition-colors">
-                Features
-              </a>
-              <a href="#" className="text-gray-600 hover:text-green-600 transition-colors">
-                Contact
-              </a>
-
-              {user ? (
-                // User Dropdown
-                <div className="relative">
-                  <button
-                    onClick={() => setDropdownOpen(!dropdownOpen)}
-                    className="flex items-center gap-2 focus:outline-none"
-                  >
-                    <img
-                      src={user.photo || 'https://via.placeholder.com/40'}
-                      alt="User"
-                      className="w-10 h-10 rounded-full border border-gray-300"
-                    />
-                  </button>
-
-                  {dropdownOpen && (
-                    <div className="absolute right-0 mt-2 w-48 bg-white shadow-lg rounded-lg overflow-hidden">
-                      <div className="px-4 py-2 text-gray-700 border-b">
-                        {user.firstName} {user.lastName}
+            <>
+              {/* Desktop Navigation */}
+              <div className="hidden md:flex items-center space-x-6">
+                <div className="flex space-x-4">
+                  {NAV_LINKS.map((link) => (
+                    <motion.a
+                      key={link.name}
+                      href={link.path}
+                      className="relative px-3 py-2 text-gray-600 hover:text-green-700 group"
+                      whileHover={{ scale: 1.05 }}
+                    >
+                      <div className="flex items-center space-x-2">
+                        <link.icon className="h-5 w-5" />
+                        <span>{link.name}</span>
                       </div>
-                      <a href="/profile" className="flex items-center px-4 py-2 text-gray-700 hover:bg-gray-100">
-                        <UserIcon className="w-5 h-5 mr-2" /> Profile
-                      </a>
-                      <button
-                        onClick={() => {
-                          logout();
-                          setDropdownOpen(false);
-                        }}
-                        className="flex w-full items-center px-4 py-2 text-gray-700 hover:bg-gray-100"
-                      >
-                        <LogOut className="w-5 h-5 mr-2" /> Logout
-                      </button>
-                    </div>
-                  )}
+                      <div className="absolute bottom-0 left-0 h-0.5 bg-green-600 w-0 group-hover:w-full transition-all duration-300" />
+                    </motion.a>
+                  ))}
                 </div>
-              ) : (
-                <a
-                  href="/auth"
-                  className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors"
-                >
-                  Sign In
-                </a>
-              )}
-            </div>
+
+                {/* User Section */}
+                {user ? (
+                  <div className="relative ml-4">
+                    <motion.button
+                      onClick={() => setIsOpen(!isOpen)}
+                      className="flex items-center space-x-2 group"
+                      whileHover={{ scale: 1.05 }}
+                    >
+                      <div className="relative">
+                        <div className="absolute inset-0 rounded-full bg-gradient-to-tr from-green-500 to-emerald-600 opacity-0 group-hover:opacity-100 transition-opacity" />
+                        <img
+                          src={user.photo || '/default-avatar.svg'}
+                          alt="Profile"
+                          className="h-9 w-9 rounded-full border-2 border-green-100 group-hover:border-transparent transition-all"
+                        />
+                      </div>
+                    </motion.button>
+
+                    <AnimatePresence>
+                      {isOpen && (
+                        <motion.div
+                          initial={{ opacity: 0, y: -10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          exit={{ opacity: 0, y: -10 }}
+                          className="absolute right-0 mt-2 w-64 bg-white rounded-xl shadow-lg border border-green-100"
+                        >
+                          <div className="p-4 bg-gradient-to-r from-green-50 to-emerald-50 border-b border-green-100">
+                            <div className="text-sm font-medium text-green-800">
+                              {user.firstName} {user.lastName}
+                            </div>
+                            <div className="text-xs text-green-600">{user.email}</div>
+                          </div>
+                          <div className="p-2">
+                            <a
+                              href="/profile"
+                              className="flex items-center space-x-3 px-3 py-2.5 text-gray-600 hover:bg-green-50 rounded-lg"
+                            >
+                              <User className="h-5 w-5 text-green-600" />
+                              <span>Profile Settings</span>
+                            </a>
+                            <button
+                              onClick={logout}
+                              className="w-full flex items-center space-x-3 px-3 py-2.5 text-gray-600 hover:bg-green-50 rounded-lg"
+                            >
+                              <LogOut className="h-5 w-5 text-green-600" />
+                              <span>Sign Out</span>
+                            </button>
+                          </div>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </div>
+                ) : (
+                  <motion.a
+                    href="/auth"
+                    className="ml-4 px-5 py-2.5 rounded-lg bg-gradient-to-r from-green-600 to-emerald-600 text-white shadow-md hover:shadow-lg transition-all"
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                  >
+                    Get Started
+                  </motion.a>
+                )}
+              </div>
+
+              {/* Mobile Menu Button */}
+              <button
+                onClick={() => setIsOpen(!isOpen)}
+                className="md:hidden p-2 rounded-lg hover:bg-green-50 transition-colors"
+              >
+                {isOpen ? (
+                  <X className="h-6 w-6 text-green-600" />
+                ) : (
+                  <Menu className="h-6 w-6 text-green-600" />
+                )}
+              </button>
+            </>
           )}
         </div>
       </div>
-    </nav>
+
+      {/* Mobile Menu */}
+      <AnimatePresence>
+        {isOpen && (
+          <motion.div
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            className="md:hidden absolute w-full bg-white/95 backdrop-blur-xl border-b border-green-100"
+          >
+            <div className="px-4 py-6 space-y-4">
+              {user && (
+                <div className="pb-4 border-b border-green-100">
+                  <div className="flex items-center space-x-3">
+                    <img
+                      src={user.photo || '/default-avatar.svg'}
+                      alt="Profile"
+                      className="h-10 w-10 rounded-full border-2 border-green-600"
+                    />
+                    <div>
+                      <div className="text-lg font-medium text-green-800">
+                        {user.firstName} {user.lastName}
+                      </div>
+                      <div className="text-sm text-green-600">{user.email}</div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {NAV_LINKS.map((link) => (
+                <a
+                  key={link.name}
+                  href={link.path}
+                  className="flex items-center space-x-3 px-3 py-3 text-gray-600 hover:bg-green-50 rounded-lg transition-colors"
+                >
+                  <link.icon className="h-6 w-6 text-green-600" />
+                  <span>{link.name}</span>
+                </a>
+              ))}
+
+              {user ? (
+                <button
+                  onClick={logout}
+                  className="w-full flex items-center space-x-3 px-3 py-3 text-red-500 hover:bg-green-50 rounded-lg"
+                >
+                  <LogOut className="h-6 w-6" />
+                  <span>Sign Out</span>
+                </button>
+              ) : (
+                <a
+                  href="/auth"
+                  className="w-full flex items-center justify-center space-x-2 px-4 py-3 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-lg"
+                >
+                  <span>Get Started</span>
+                </a>
+              )}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </motion.nav>
   );
 };
