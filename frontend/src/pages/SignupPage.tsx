@@ -1,13 +1,14 @@
 import React, { useState } from 'react';
-import {   Eye, EyeOff } from 'lucide-react';
+import { Eye, EyeOff } from 'lucide-react';
 import { Card, CardHeader, CardContent } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
-import { UseAuth } from '@/context/AuthContext';
+import { useAuth } from '@/context/AuthContext';
 import { GoogleLogin, CredentialResponse } from '@react-oauth/google';
 import { jwtDecode } from 'jwt-decode';
-import { User } from '@/types';
 import Layout from '../Layout/Layout';
 import axios from 'axios';
+import { useNavigate } from 'react-router-dom';
+
 interface FormElements extends HTMLFormControlsCollection {
   firstName: HTMLInputElement;
   lastName: HTMLInputElement;
@@ -19,15 +20,28 @@ interface FormElements extends HTMLFormControlsCollection {
 interface SignUpFormElement extends HTMLFormElement {
   readonly elements: FormElements;
 }
+
+// Define proper types for the decoded JWT token
+interface DecodedGoogleToken {
+  sub: string;
+  given_name: string;
+  family_name: string;
+  picture: string;
+  email: string;
+  // Add other fields as needed
+}
+
 export default function SignupPage() {
-  const { login } = UseAuth();
+  const { login } = useAuth();
+  const navigate = useNavigate();
   const [showPassword, setShowPassword] = useState<boolean>(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState<boolean>(false);
+  const [error, setError] = useState<string | null>(null);
 
   const handleGoogleSuccess = async (credentialResponse: CredentialResponse) => {
     if (credentialResponse.credential) {
-      const decoded = jwtDecode<User>(credentialResponse.credential);
-      
+      const decoded = jwtDecode<DecodedGoogleToken>(credentialResponse.credential);
+
       try {
         // Send Google OAuth data to backend
         const response = await axios.post('http://localhost:5000/api/auth/oauth/login', {
@@ -65,38 +79,52 @@ export default function SignupPage() {
       email: form.elements.email.value,
       password: form.elements.password.value,
     };
-  
+
     try {
       const response = await axios.post('http://localhost:5000/api/auth/signup', formData);
-  
+
       if (response.status === 201) {
         // Assuming the backend returns user details & token after signup
         const { user, token } = response.data;
-  
+
         // Store the token (optional: in localStorage for persistence)
         login(user);
-      localStorage.setItem("token", token);
-  
+        localStorage.setItem("token", token);
+
         console.log('Signup successful, user logged in:', user);
+        navigate('/dashboard');
       }
-    } catch (error) {
-      console.error('Signup failed:', error.response?.data || error.message);
+    } catch (err) {
+      const error = err as Error | { response?: { data?: string } };
+      setError('Signup failed');
+      if ('response' in error && error.response?.data) {
+        console.error('Signup failed:', error.response.data);
+      } else if (error instanceof Error) {
+        console.error('Signup failed:', error.message);
+      } else {
+        console.error('Signup failed:', error);
+      }
     }
   };
-  
+
   return (
     <Layout showFullMenu={false}>
       {/* Main Content */}
       <div className="flex-1 flex items-center justify-center px-6 py-12">
         <Card className="w-full max-w-md">
           <CardHeader className="space-y-1 text-center">
-            
+
             <h2 className="text-2xl font-semibold tracking-tight">Create an account</h2>
             <p className="text-sm text-gray-500">
               Get started with PlantCare
             </p>
           </CardHeader>
           <CardContent className="space-y-4">
+            {error && (
+              <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative" role="alert">
+                <span className="block sm:inline">{error}</span>
+              </div>
+            )}
             <div className="w-full flex justify-center">
               <GoogleLogin
                 onSuccess={handleGoogleSuccess}

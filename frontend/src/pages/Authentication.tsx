@@ -1,7 +1,7 @@
 import React, { useState } from 'react'
 import { Card, CardHeader, CardContent } from '../components/ui/card';
 import { Separator } from '../components/ui/separator';
-import { UseAuth } from '../context/AuthContext';
+import { useAuth } from '../context/AuthContext';
 import { GoogleLogin, CredentialResponse } from '@react-oauth/google';
 import { jwtDecode } from 'jwt-decode';
 import { User } from './types';
@@ -19,7 +19,7 @@ interface SignInFormElement extends HTMLFormElement {
 }
 
 const Authentication = () => {
-  const { login } = UseAuth();
+  const { login } = useAuth();
   const navigate = useNavigate();
   const [error, setError] = useState<string>('');
   const handleGoogleSuccess = async (credentialResponse: CredentialResponse) => {

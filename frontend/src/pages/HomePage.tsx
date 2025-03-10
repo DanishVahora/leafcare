@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { ArrowRight, Shield, Upload, FileSearch, Code, ChevronDown, ChevronUp } from "lucide-react";
+import { ArrowRight, ChevronDown, ChevronUp } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import Layout from "../Layout/Layout";
 import { Button } from "@/components/ui/button";

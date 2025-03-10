@@ -1,11 +1,11 @@
 import React, { useEffect, useState, useRef } from "react";
 import { CheckCircle, ArrowRight, Award, ShieldCheck, Zap, Layers, Lock, CreditCard, Users, Clock, Gift, BarChart, Server, Download, Sparkles } from "lucide-react";
-import { motion, useInView, AnimatePresence } from "framer-motion";
+import { motion, useInView } from "framer-motion";
 import Layout from "../Layout/Layout";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Input } from "@/components/ui/input";
 
@@ -118,8 +118,9 @@ const SubscribePro: React.FC = () => {
       name: "Plant Disease Detection " + selectedPlan.charAt(0).toUpperCase() + selectedPlan.slice(1),
       description: paymentPeriod === "monthly" ? "Monthly Subscription" : "Annual Subscription",
       image: "/logo.png",
-      handler: function (response: any) {
+      handler: function (response: unknown) {
         setIsLoading(false);
+        console.log("Payment success:", response);
         // Here you would typically call your backend to verify the payment
         // and activate the subscription
       },

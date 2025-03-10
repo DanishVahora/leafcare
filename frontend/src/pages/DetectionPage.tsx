@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useEffect } from "react";
+import React, { useState, useCallback } from "react";
 import { Layout } from "../Layout/Layout";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -6,13 +6,13 @@ import { Badge } from "@/components/ui/badge";
 import { Upload, Link, Image, TestTube2, AlertCircle, Loader2, Lock } from "lucide-react";
 import { motion } from "framer-motion";
 import { useDropzone } from "react-dropzone";
-import { Navigate, useNavigate } from "react-router-dom";
+import {  useNavigate } from "react-router-dom";
 
-const classNames = [
-  'Apple__Apple_scab', 'Apple_Black_rot', 'Apple_Cedar_apple_rust', 'Apple_healthy',
-  // ... (all your class names here)
-  'Tomato__healthy'
-];
+// const classNames = [
+//   'Apple__Apple_scab', 'Apple_Black_rot', 'Apple_Cedar_apple_rust', 'Apple_healthy',
+//   // ... (all your class names here)
+//   'Tomato__healthy'
+// ];
 
 const fadeInUp = {
   hidden: { opacity: 0, y: 20 },
@@ -27,7 +27,7 @@ const DetectionPage: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [url, setUrl] = useState("");
-  const [isSubscribed, setIsSubscribed] = useState(false);
+  const [isSubscribed] = useState(false);
 
   // Image preprocessing similar to training
   const preprocessImage = useCallback((img: HTMLImageElement) => {
