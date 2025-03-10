@@ -9,7 +9,7 @@ import Dashboard from '../pages/Dashboard';
 import PlantAnalyze from '../pages/PlantAnalyzer';
 import DetectionPage from '@/pages/DetectionPage';
 import SubscribePro from '@/pages/SubscribePro';
-import DocumentPage from '@/pages/DocumentPage';
+import { DocumentPage } from '@/pages/DocumentPage';
 
 export const AppRoute = () => {
   return (
@@ -59,7 +59,7 @@ export const AppRoute = () => {
 
         <Route path='/docs' element={
           // <ProtectedRoute>
-          < DocumentPage/>
+          <DocumentPage/>
           // </ProtectedRoute>
         } />
 
