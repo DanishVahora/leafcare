@@ -7,8 +7,9 @@ import { GoogleLogin, CredentialResponse } from '@react-oauth/google';
 import { jwtDecode } from 'jwt-decode';
 import Layout from '../Layout/Layout';
 import axios from 'axios';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { API_BASE_URL } from '@/config/config';
+import { googleOAuthConfig } from '@/config/oauthConfig';
 
 interface FormElements extends HTMLFormControlsCollection {
   firstName: HTMLInputElement;
@@ -38,12 +39,16 @@ export default function SignupPage() {
   const [showPassword, setShowPassword] = useState<boolean>(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
 
   const handleGoogleSuccess = async (credentialResponse: CredentialResponse) => {
     if (credentialResponse.credential) {
-      const decoded = jwtDecode<DecodedGoogleToken>(credentialResponse.credential);
-
+      setIsSubmitting(true);
+      setError(null);
+      
       try {
+        const decoded = jwtDecode<DecodedGoogleToken>(credentialResponse.credential);
+
         // Send Google OAuth data to backend using the API_BASE_URL
         const response = await axios.post(`${API_BASE_URL}/auth/oauth/login`, {
           provider: 'google',
@@ -62,23 +67,51 @@ export default function SignupPage() {
         navigate('/dashboard');
       } catch (error) {
         console.error('Google OAuth login failed:', error);
-        setError('Failed to authenticate with Google');
+        if (axios.isAxiosError(error) && error.response) {
+          setError(error.response.data?.message || 'Failed to authenticate with Google');
+        } else {
+          setError('Failed to authenticate with Google');
+        }
+      } finally {
+        setIsSubmitting(false);
       }
     }
   };
 
-  const handleGoogleError = () => {
-    console.error('Google Sign Up Failed');
+  const validateForm = (form: FormElements): string | null => {
+    const password = form.password.value;
+    const confirmPassword = form.confirmPassword.value;
+    
+    if (password !== confirmPassword) {
+      return "Passwords don't match";
+    }
+    
+    if (password.length < 8) {
+      return "Password must be at least 8 characters long";
+    }
+    
+    return null;
   };
 
   const handleEmailSignUp = async (e: React.FormEvent<SignUpFormElement>) => {
     e.preventDefault();
-    const form = e.currentTarget;
+    const form = e.currentTarget.elements;
+    
+    // Validate form
+    const validationError = validateForm(form);
+    if (validationError) {
+      setError(validationError);
+      return;
+    }
+    
+    setIsSubmitting(true);
+    setError(null);
+    
     const formData = {
-      firstName: form.elements.firstName.value,
-      lastName: form.elements.lastName.value,
-      email: form.elements.email.value,
-      password: form.elements.password.value,
+      firstName: form.firstName.value,
+      lastName: form.lastName.value,
+      email: form.email.value,
+      password: form.password.value,
     };
 
     try {
@@ -96,15 +129,14 @@ export default function SignupPage() {
         navigate('/dashboard');
       }
     } catch (err) {
-      const error = err as Error | { response?: { data?: string } };
-      setError('Signup failed');
-      if ('response' in error && error.response?.data) {
-        console.error('Signup failed:', error.response.data);
-      } else if (error instanceof Error) {
-        console.error('Signup failed:', error.message);
+      if (axios.isAxiosError(err) && err.response) {
+        setError(err.response.data?.message || 'Signup failed');
       } else {
-        console.error('Signup failed:', error);
+        setError('An unexpected error occurred');
       }
+      console.error('Signup failed:', err);
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -114,7 +146,6 @@ export default function SignupPage() {
       <div className="flex-1 flex items-center justify-center px-6 py-12">
         <Card className="w-full max-w-md">
           <CardHeader className="space-y-1 text-center">
-
             <h2 className="text-2xl font-semibold tracking-tight">Create an account</h2>
             <p className="text-sm text-gray-500">
               Get started with PlantCare
@@ -129,7 +160,9 @@ export default function SignupPage() {
             <div className="w-full flex justify-center">
               <GoogleLogin
                 onSuccess={handleGoogleSuccess}
-                onError={handleGoogleError}
+                onError={() => {
+                  setError(googleOAuthConfig.handleOAuthError("Google authentication failed"));
+                }}
                 theme="outline"
                 size="large"
                 type="standard"
@@ -256,17 +289,18 @@ export default function SignupPage() {
 
               <button
                 type="submit"
-                className="w-full bg-green-600 hover:bg-green-700 text-white font-medium py-3 rounded-lg transition-colors"
+                disabled={isSubmitting}
+                className="w-full bg-green-600 hover:bg-green-700 text-white font-medium py-3 rounded-lg transition-colors disabled:opacity-70"
               >
-                Create Account
+                {isSubmitting ? 'Creating Account...' : 'Create Account'}
               </button>
             </form>
 
             <p className="text-center text-sm text-gray-500">
               Already have an account?{' '}
-              <a href="#" className="font-medium text-green-600 hover:text-green-500">
+              <Link to="/auth" className="font-medium text-green-600 hover:text-green-500">
                 Sign in
-              </a>
+              </Link>
             </p>
           </CardContent>
         </Card>
