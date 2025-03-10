@@ -7,6 +7,8 @@ import ProtectedRoute from './ProtectedRoute';
 import PublicRoute from './PublicRoute';
 import Dashboard from '../pages/Dashboard';
 import PlantAnalyze from '../pages/PlantAnalyzer';
+import DetectionPage from '@/pages/DetectionPage';
+import SubscribePro from '@/pages/SubscribePro';
 
 export const AppRoute = () => {
   return (
@@ -14,38 +16,51 @@ export const AppRoute = () => {
       <Routes>
         {/* Public routes */}
         <Route path="/" element={<HomePage />} />
-        
+
         {/* Auth routes */}
         <Route path="/auth" element={
           <PublicRoute>
             <Authentication />
           </PublicRoute>
         } />
-        
+
         <Route path="/signup" element={
           <PublicRoute>
             <SignupPage />
           </PublicRoute>
         } />
-        
+
         {/* Protected routes */}
         <Route path="/dashboard" element={
-          <ProtectedRoute>
-            <Dashboard />
-          </ProtectedRoute>
-        } /> 
-        
+          // <ProtectedRoute>
+          <Dashboard />
+          // </ProtectedRoute>
+        } />
+
+        {/* Protected routes */}
+        <Route path="/detect" element={
+          // <ProtectedRoute>
+          <DetectionPage />
+          // </ProtectedRoute>
+        } />
+
         <Route path='/PlantAnalyze' element={
-          <ProtectedRoute>
-            <PlantAnalyze />
-          </ProtectedRoute>
+          // <ProtectedRoute>
+          <PlantAnalyze />
+          // </ProtectedRoute>
+        } />
+
+        <Route path='/SubToPro' element={
+          // <ProtectedRoute>
+          <SubscribePro />
+          // </ProtectedRoute>
         } />
 
 
-        {/* Not found */} 
+        {/* Not found */}
         <Route path="*" element={<h1>Not Found</h1>} />
-        </Routes>
-        </BrowserRouter>
-)
+      </Routes>
+    </BrowserRouter>
+  )
 }
 export default AppRoute;
