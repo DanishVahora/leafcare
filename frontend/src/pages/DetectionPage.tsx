@@ -19,7 +19,6 @@ import {
 } from "lucide-react";
 import { motion } from "framer-motion";
 import { useDropzone } from "react-dropzone";
-import { useNavigate } from "react-router-dom";
 
 const fadeInUp = {
   hidden: { opacity: 0, y: 20 },
@@ -27,7 +26,6 @@ const fadeInUp = {
 };
 
 const DetectionPage: React.FC = () => {
-  const navigate = useNavigate();
   const [imageSrc, setImageSrc] = useState<string | null>(null);
   const [preprocessedImage, setPreprocessedImage] = useState<string | null>(null);
   const [results, setResults] = useState<any>(null);
