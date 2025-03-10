@@ -1,18 +1,25 @@
-import React, { useState, useCallback } from "react";
+import React, { useState, useCallback, useRef } from "react";
 import { Layout } from "../Layout/Layout";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Upload, Link, Image, TestTube2, AlertCircle, Loader2, Lock } from "lucide-react";
+import { 
+  Upload, 
+  Link, 
+  Image, 
+  TestTube2, 
+  AlertCircle, 
+  Loader2, 
+  Volume2, 
+  VolumeX, 
+  Shield, 
+  ShoppingBag, 
+  BookOpen,
+  Sprout // Add this import
+} from "lucide-react";
 import { motion } from "framer-motion";
 import { useDropzone } from "react-dropzone";
-import {  useNavigate } from "react-router-dom";
-
-// const classNames = [
-//   'Apple__Apple_scab', 'Apple_Black_rot', 'Apple_Cedar_apple_rust', 'Apple_healthy',
-//   // ... (all your class names here)
-//   'Tomato__healthy'
-// ];
+import { useNavigate } from "react-router-dom";
 
 const fadeInUp = {
   hidden: { opacity: 0, y: 20 },
@@ -27,41 +34,34 @@ const DetectionPage: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [url, setUrl] = useState("");
-  const [isSubscribed] = useState(false);
+  const [treatmentInfo, setTreatmentInfo] = useState<any>(null);
+  const [loadingTreatment, setLoadingTreatment] = useState(false);
+  const [treatmentError, setTreatmentError] = useState<string | null>(null);
+  const [isReading, setIsReading] = useState(false);
+  const speechSynthRef = useRef<SpeechSynthesisUtterance | null>(null);
 
-  // Image preprocessing similar to training
   const preprocessImage = useCallback((img: HTMLImageElement) => {
     const canvas = document.createElement('canvas');
     const ctx = canvas.getContext('2d');
-    
-    // Set to training dimensions
     canvas.width = 128;
     canvas.height = 128;
-    
-    // Draw and process image
     ctx?.drawImage(img, 0, 0, 128, 128);
     const imageData = ctx?.getImageData(0, 0, 128, 128);
-    
-    // Convert to array compatible with model
     const processedArray = new Float32Array(128 * 128 * 3);
     if (imageData) {
       for (let i = 0; i < imageData.data.length; i += 4) {
-        processedArray[i/4 * 3] = imageData.data[i] / 255;     // R
-        processedArray[i/4 * 3 + 1] = imageData.data[i+1] / 255; // G
-        processedArray[i/4 * 3 + 2] = imageData.data[i+2] / 255; // B
+        processedArray[i/4 * 3] = imageData.data[i] / 255;
+        processedArray[i/4 * 3 + 1] = imageData.data[i+1] / 255;
+        processedArray[i/4 * 3 + 2] = imageData.data[i+2] / 255;
       }
     }
-    
-    // Show preview of processed image
     setPreprocessedImage(canvas.toDataURL());
-    
     return Array.from(processedArray);
   }, []);
 
   const onDrop = useCallback((acceptedFiles: File[]) => {
     const file = acceptedFiles[0];
     const reader = new FileReader();
-    
     reader.onload = (e) => {
       const img = new window.Image();
       img.src = e.target?.result as string;
@@ -94,9 +94,134 @@ const DetectionPage: React.FC = () => {
     }
   };
 
+  // Enhanced parse function for better structure
+  const parseGeminiResponse = (text: string) => {
+    // First, clean up the text by removing asterisks and dashes
+    const cleanText = text.replace(/\*\*/g, '').replace(/^[-•]/gm, '').trim();
+    
+    const sections = cleanText.split(/\n(?=[A-Z][^:]+:)/g).filter(s => s.trim().length > 0);
+    const result: Record<string, any> = {};
+    
+    sections.forEach(section => {
+      const [title, ...content] = section.split(':');
+      if (title && content) {
+        const sectionTitle = title.trim();
+        const items = content.join(':').split(/\n/)
+          .map(item => item.trim())
+          .filter(item => item.length > 0);
+
+        // Special handling for complex sections
+        if (sectionTitle === "Recommended Products") {
+          result[sectionTitle] = items.map(item => {
+            const [name, ...rest] = item.split(/:\s*/);
+            return { name, description: rest.join(': ') };
+          });
+        } else if (sectionTitle === "Educational Resources") {
+          result[sectionTitle] = items.map(item => {
+            const urlMatch = item.match(/(https?:\/\/[^\s]+)/);
+            return {
+              text: urlMatch ? item.replace(urlMatch[0], '').trim() : item,
+              url: urlMatch?.[0]
+            };
+          });
+        } else {
+          result[sectionTitle] = items;
+        }
+      }
+    });
+
+    // Store clean text for speech
+    result.originalText = cleanText;
+    
+    return result;
+  };
+
+  // Enhanced treatment info fetcher with more comprehensive content
+  const fetchTreatmentInfo = async (disease: string) => {
+    setLoadingTreatment(true);
+    setTreatmentError(null);
+    try {
+      const prompt = `As an agricultural expert specializing in plant diseases in India, provide detailed treatment information for ${disease} in plants. Focus on practical, actionable advice that farmers can implement immediately.
+
+FORMAT YOUR RESPONSE EXACTLY AS FOLLOWS:
+
+**About The Disease:**
+- [Brief description of what the disease is]
+- [How it spreads]
+- [What crops it typically affects]
+
+**Identification Signs:**
+- [List 3-4 key visual symptoms that confirm the disease]
+
+**Immediate Control Measures:**
+- [Most urgent action to take]
+- [Second urgent action]
+- [Third urgent action]
+
+**Organic Solutions:**
+- [Specific organic treatment 1]: [Exact application method and frequency]
+- [Specific organic treatment 2]: [Exact application method and frequency]
+
+**Chemical Treatments:**
+- [Specific Indian-available fungicide/pesticide name]: [Exact concentration and application method]
+- [Alternative chemical name]: [Exact concentration and application method]
+
+**Prevention Tips:**
+- [Specific preventive measure 1]
+- [Specific preventive measure 2]
+- [Specific preventive measure 3]
+
+**Recommended Products:**
+- [Specific Indian brand name]: [Brief description and approximate price]
+- [Specific Indian brand name]: [Brief description and approximate price]
+
+**Educational Resources:**
+- [Link to a specific YouTube video about managing this disease]
+- [Link to an Indian agricultural extension service document]
+- [Link to a mobile app that helps identify or treat this disease]
+
+Use straightforward language appropriate for farmers with basic education. Prioritize treatments available in rural Indian markets. For chemical treatments, include safety precautions.`;
+
+      const response = await fetch(
+        `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${import.meta.env.VITE_GEMINI_API_KEY}`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            contents: [{
+              parts: [{ text: prompt }]
+            }],
+            generationConfig: {
+              temperature: 0.2,
+              topK: 40,
+              topP: 0.95,
+              maxOutputTokens: 1024
+            }
+          })
+        }
+      );
+
+      if (!response.ok) throw new Error('API request failed');
+      const data = await response.json();
+      
+      const treatmentText = data.candidates[0].content.parts[0].text;
+      const parsedTreatment = parseGeminiResponse(treatmentText);
+      
+      // Keep the original text for read-aloud feature
+      parsedTreatment.originalText = treatmentText.replace(/\*\*/g, '');
+      
+      setTreatmentInfo(parsedTreatment);
+    } catch (err) {
+      setTreatmentError("Failed to fetch treatment information. Please try again.");
+    } finally {
+      setLoadingTreatment(false);
+    }
+  };
+
   const handleDetection = async () => {
     setLoading(true);
     setError(null);
+    setTreatmentInfo(null);
     
     try {
       const formData = new FormData();
@@ -110,6 +235,10 @@ const DetectionPage: React.FC = () => {
 
       const data = await response.json();
       setResults(data);
+      
+      if (data.prediction) {
+        await fetchTreatmentInfo(data.prediction.replace(/_/g, ' '));
+      }
     } catch (err) {
       setError("Error processing image. Please try again.");
     } finally {
@@ -117,10 +246,221 @@ const DetectionPage: React.FC = () => {
     }
   };
 
+  const handleReadAloud = () => {
+    if (!treatmentInfo || !treatmentInfo.originalText) return;
+    
+    if (isReading) {
+      window.speechSynthesis.cancel();
+      setIsReading(false);
+      return;
+    }
+  
+    // Load voices first
+    const loadVoices = () => {
+      return new Promise<SpeechSynthesisVoice[]>((resolve) => {
+        let voices = window.speechSynthesis.getVoices();
+        if (voices.length > 0) {
+          resolve(voices);
+        } else {
+          window.speechSynthesis.onvoiceschanged = () => {
+            voices = window.speechSynthesis.getVoices();
+            resolve(voices);
+          };
+        }
+      });
+    };
+  
+    const startSpeaking = async () => {
+      try {
+        setIsReading(true);
+        const voices = await loadVoices();
+        
+        // Create a clean text version for reading
+        const textToRead = Object.entries(treatmentInfo)
+          .filter(([key]) => key !== 'originalText')
+          .map(([section, items]) => {
+            if (Array.isArray(items)) {
+              const itemsText = items
+                .map(item => {
+                  if (typeof item === 'string') return item;
+                  if (item.name) return `${item.name}: ${item.description}`;
+                  if (item.text) return item.text;
+                  return '';
+                })
+                .join('. ');
+              return `${section}. ${itemsText}`;
+            }
+            return '';
+          })
+          .join('. ');
+  
+        const utterance = new SpeechSynthesisUtterance(textToRead);
+        
+        // Try to find Hindi or Indian English voice
+        const hindiVoice = voices.find(voice => voice.lang.includes('hi'));
+        const indianEnglishVoice = voices.find(voice => voice.lang.includes('en-IN'));
+        const englishVoice = voices.find(voice => voice.lang.includes('en'));
+        
+        utterance.voice = hindiVoice || indianEnglishVoice || englishVoice || voices[0];
+        utterance.rate = 0.9;
+        utterance.pitch = 1;
+        utterance.volume = 1;
+  
+        utterance.onend = () => {
+          setIsReading(false);
+          speechSynthRef.current = null;
+        };
+  
+        utterance.onerror = (event) => {
+          console.error('Speech synthesis error:', event);
+          setIsReading(false);
+          speechSynthRef.current = null;
+        };
+  
+        speechSynthRef.current = utterance;
+        window.speechSynthesis.speak(utterance);
+  
+      } catch (error) {
+        console.error('Error starting speech:', error);
+        setIsReading(false);
+      }
+    };
+  
+    startSpeaking();
+  };
+  
+  // Add this useEffect to handle cleanup
+  React.useEffect(() => {
+    return () => {
+      if (speechSynthRef.current) {
+        window.speechSynthesis.cancel();
+      }
+    };
+  }, []);
+
+  // Function to render treatment info with enhanced UI
+  const renderTreatmentInfo = () => {
+    if (!treatmentInfo) return null;
+
+    const SectionHeader: React.FC<{ title: string }> = ({ title }) => (
+      <div className="flex items-center gap-3 mb-4 p-3 bg-white rounded-lg shadow-sm">
+        <div className="p-2 rounded-full bg-green-100">
+          {sectionIcons[title] || <Sprout className="w-5 h-5 text-green-600" />}
+        </div>
+        <h3 className="text-xl font-semibold text-green-800">{title}</h3>
+      </div>
+    );
+
+    const sectionIcons: Record<string, React.ReactNode> = {
+      "About The Disease": <AlertCircle className="w-5 h-5 text-amber-600" />,
+      "Identification Signs": <Image className="w-5 h-5 text-red-600" />,
+      "Immediate Control Measures": <TestTube2 className="w-5 h-5 text-blue-600" />,
+      "Organic Solutions": <span className="text-2xl">🌱</span>,
+      "Chemical Treatments": <Shield className="w-5 h-5 text-purple-600" />,
+      "Prevention Tips": <span className="text-2xl">🛡️</span>,
+      "Recommended Products": <ShoppingBag className="w-5 h-5 text-orange-600" />,
+      "Educational Resources": <BookOpen className="w-5 h-5 text-indigo-600" />
+    };
+
+    const renderItem = (item: any, idx: number, section: string) => {
+      // Educational Resources with links
+      if (section === "Educational Resources") {
+        if (typeof item === 'object' && item.text && item.url) {
+          return (
+            <div key={idx} className="flex items-start gap-3 group">
+              <span className="mt-1 text-indigo-600">🔗</span>
+              <a
+                href={item.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-gray-700 hover:text-indigo-600 transition-colors"
+              >
+                {item.text}
+                <span className="ml-2 text-indigo-400 text-xs">(click to open)</span>
+              </a>
+            </div>
+          );
+        }
+        return null;
+      }
+  
+      // Recommended Products
+      if (section === "Recommended Products" && typeof item === 'object' && item.name) {
+        return (
+          <div key={idx} className="flex items-start gap-3">
+            <span className="mt-1 text-orange-500">🛒</span>
+            <div>
+              <h4 className="font-medium text-orange-800">{item.name}</h4>
+              <p className="text-gray-600 text-sm">{item.description}</p>
+            </div>
+          </div>
+        );
+      }
+  
+      // Immediate Control Measures
+      if (section === "Immediate Control Measures") {
+        return (
+          <div key={idx} className="flex items-start gap-3">
+            <div className="w-6 h-6 flex items-center justify-center bg-blue-100 text-blue-800 rounded-full">
+              {idx + 1}
+            </div>
+            <p className="text-gray-700">{String(item)}</p>
+          </div>
+        );
+      }
+  
+      // Default list item
+      return (
+        <div key={idx} className="flex items-start gap-3">
+          <span className="mt-1 text-green-600">•</span>
+          <p className="text-gray-700">{String(item)}</p>
+        </div>
+      );
+    };
+  
+    return (
+      <div className="space-y-8">
+        {Object.entries(treatmentInfo)
+          .filter(([key]) => key !== 'originalText')
+          .map(([section, items]) => (
+            <div key={section} className="bg-white rounded-xl p-6 shadow-sm hover:shadow-md transition-shadow">
+              <SectionHeader title={section} />
+              
+              <div className="space-y-4 pl-4 border-l-4 border-green-100">
+                {Array.isArray(items) && items.map((item, idx) => renderItem(item, idx, section))}
+              </div>
+            </div>
+          ))}
+  
+        <div className="mt-6 p-4 bg-amber-50 rounded-lg border border-amber-200">
+          <div className="flex items-center gap-3 text-amber-800">
+            <AlertCircle className="w-5 h-5 flex-shrink-0" />
+            <div>
+              <p className="font-medium">Important Notes:</p>
+              <ul className="list-disc pl-5 mt-2 space-y-2 text-sm">
+                <li>Always wear protective gear when handling chemicals</li>
+                <li>Test treatments on small areas first</li>
+                <li>Consult local agricultural experts for specific advice</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  // Cancel speech when component unmounts
+  React.useEffect(() => {
+    return () => {
+      if (isReading) {
+        window.speechSynthesis.cancel();
+      }
+    };
+  }, [isReading]);
+
   return (
     <Layout>
-      <br /><br />
-      <div className="container mx-auto px-6 py-12">
+      <div className="container mx-auto px-6 py-8">
         <motion.div
           initial="hidden"
           animate="visible"
@@ -132,10 +472,8 @@ const DetectionPage: React.FC = () => {
             Plant Disease Detection
           </h1>
 
-          {/* Input Methods */}
           <div className="grid md:grid-cols-2 gap-6 mb-12">
-            {/* URL Input */}
-            <Card className="p-6 shadow-lg">
+            <Card className="p-6 shadow-lg hover:shadow-xl transition-shadow">
               <div className="flex flex-col gap-4">
                 <div className="flex items-center gap-2 text-green-700 mb-4">
                   <Link className="w-5 h-5" />
@@ -146,17 +484,16 @@ const DetectionPage: React.FC = () => {
                   value={url}
                   onChange={(e) => setUrl(e.target.value)}
                   placeholder="Paste image URL here"
-                  className="p-3 border rounded-lg focus:ring-2 focus:ring-green-500"
+                  className="p-3 border rounded-lg focus:ring-2 focus:ring-green-500 focus:outline-none"
                 />
-                <Button onClick={handleUrlSubmit} className="gap-2">
+                <Button onClick={handleUrlSubmit} className="gap-2 bg-green-600 hover:bg-green-700">
                   Load URL
                   <Image className="w-4 h-4" />
                 </Button>
               </div>
             </Card>
 
-            {/* Upload Box */}
-            <Card className="p-6 shadow-lg">
+            <Card className="p-6 shadow-lg hover:shadow-xl transition-shadow">
               <div
                 {...getRootProps()}
                 className={`border-2 border-dashed rounded-lg p-8 text-center cursor-pointer transition-colors
@@ -174,7 +511,6 @@ const DetectionPage: React.FC = () => {
             </Card>
           </div>
 
-          {/* Image Previews */}
           {imageSrc && (
             <motion.div
               initial={{ opacity: 0 }}
@@ -203,14 +539,13 @@ const DetectionPage: React.FC = () => {
             </motion.div>
           )}
 
-          {/* Detection Controls */}
           {imageSrc && (
             <div className="text-center mb-12">
               <Button
                 onClick={handleDetection}
                 disabled={loading}
                 size="lg"
-                className="gap-2 px-8 py-4 text-lg"
+                className="gap-2 px-8 py-4 text-lg bg-green-600 hover:bg-green-700"
               >
                 {loading ? (
                   <>
@@ -227,7 +562,6 @@ const DetectionPage: React.FC = () => {
             </div>
           )}
 
-          {/* Results Display */}
           {results && (
             <Card className="p-6 shadow-lg mb-8">
               <div className="space-y-6">
@@ -255,7 +589,7 @@ const DetectionPage: React.FC = () => {
                       <div className="space-y-3">
                         <h4 className="font-semibold text-green-800">Top Predictions:</h4>
                         {results.top_3_predictions.map((pred: any, index: number) => (
-                          <div key={index} className="flex justify-between items-center bg-white p-3 rounded-lg">
+                          <div key={index} className="flex justify-between items-center bg-white p-3 rounded-lg shadow-sm hover:shadow transition-shadow">
                             <span className="text-gray-700">
                               {pred.class.replace(/_/g, ' ')}
                             </span>
@@ -267,28 +601,54 @@ const DetectionPage: React.FC = () => {
                       </div>
                     </div>
 
-                    {isSubscribed ? (
-                      <Button variant="link" className="text-green-600 gap-2">
-                        Learn about treatment methods
-                        <Lock className="w-4 h-4" />
-                      </Button>
-                    ) : (
-                      <div className="text-center text-gray-600">
-                        <p className="mb-2">Subscribe for detailed treatment information</p>
-                        <Button variant="default" onClick={() => navigate('/SubToPro')}>
-                          Upgrade to Premium
+                    <div className="mt-6">
+                      <div className="flex justify-between items-center mb-4">
+                        <h3 className="text-xl font-semibold text-green-700">Treatment Guide</h3>
+                        
+                        <Button 
+                          onClick={handleReadAloud} 
+                          variant="outline" 
+                          className={`gap-2 ${isReading ? 'bg-red-50' : 'bg-green-50'}`}
+                          disabled={!treatmentInfo || loadingTreatment}
+                        >
+                          {isReading ? (
+                            <>
+                              <VolumeX className="w-4 h-4" />
+                              Stop Reading
+                            </>
+                          ) : (
+                            <>
+                              <Volume2 className="w-4 h-4" />
+                              Read Aloud
+                            </>
+                          )}
                         </Button>
                       </div>
-                    )}
+                      
+                      {loadingTreatment && (
+                        <div className="flex items-center gap-2 text-green-700 p-6 bg-green-50 rounded-xl">
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                          Loading treatment information...
+                        </div>
+                      )}
+
+                      {treatmentError && (
+                        <div className="text-red-600 flex items-center gap-2 p-6 bg-red-50 rounded-xl">
+                          <AlertCircle className="w-5 h-5" />
+                          {treatmentError}
+                        </div>
+                      )}
+
+                      {treatmentInfo && renderTreatmentInfo()}
+                    </div>
                   </>
                 )}
               </div>
             </Card>
           )}
 
-          {/* Error Display */}
           {error && (
-            <div className="text-red-600 flex items-center gap-2 mt-4">
+            <div className="text-red-600 flex items-center gap-2 mt-4 p-4 bg-red-50 rounded-lg">
               <AlertCircle className="w-5 h-5" />
               {error}
             </div>
