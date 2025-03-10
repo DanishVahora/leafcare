@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Upload, Link, Image, TestTube2, AlertCircle, Loader2, Lock } from "lucide-react";
 import { motion } from "framer-motion";
 import { useDropzone } from "react-dropzone";
+import { Navigate, useNavigate } from "react-router-dom";
 
 const classNames = [
   'Apple__Apple_scab', 'Apple_Black_rot', 'Apple_Cedar_apple_rust', 'Apple_healthy',
@@ -19,6 +20,7 @@ const fadeInUp = {
 };
 
 const DetectionPage: React.FC = () => {
+  const navigate = useNavigate();
   const [imageSrc, setImageSrc] = useState<string | null>(null);
   const [preprocessedImage, setPreprocessedImage] = useState<string | null>(null);
   const [results, setResults] = useState<any>(null);
@@ -273,7 +275,7 @@ const DetectionPage: React.FC = () => {
                     ) : (
                       <div className="text-center text-gray-600">
                         <p className="mb-2">Subscribe for detailed treatment information</p>
-                        <Button variant="default">
+                        <Button variant="default" onClick={() => navigate('/SubToPro')}>
                           Upgrade to Premium
                         </Button>
                       </div>

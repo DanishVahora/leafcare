@@ -9,6 +9,7 @@ import Dashboard from '../pages/Dashboard';
 import PlantAnalyze from '../pages/PlantAnalyzer';
 import DetectionPage from '@/pages/DetectionPage';
 import SubscribePro from '@/pages/SubscribePro';
+import { DocumentPage } from '@/pages/DocumentPage';
 
 export const AppRoute = () => {
   return (
@@ -56,6 +57,11 @@ export const AppRoute = () => {
           // </ProtectedRoute>
         } />
 
+        <Route path='/docs' element={
+          // <ProtectedRoute>
+          <DocumentPage/>
+          // </ProtectedRoute>
+        } />
 
         {/* Not found */}
         <Route path="*" element={<h1>Not Found</h1>} />
