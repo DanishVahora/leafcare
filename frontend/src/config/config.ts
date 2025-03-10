@@ -1,4 +1,2 @@
-// Configuration file for environment variables and constants
-
-// API base URL - change this value based on environment
-export const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:5000/api';
+// Make sure API URL includes the full protocol (http:// or https://)
+export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api';
