@@ -1,4 +1,5 @@
 from fastapi import FastAPI, File, UploadFile
+from fastapi.middleware.cors import CORSMiddleware
 import numpy as np
 import tensorflow as tf
 from tensorflow.keras.preprocessing import image as keras_image
@@ -9,6 +10,13 @@ from huggingface_hub import hf_hub_download
 
 app = FastAPI()
 
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # Allows all origins (for development only)
+    allow_credentials=True,
+    allow_methods=["*"],  # Allows all methods
+    allow_headers=["*"],  # Allows all headers
+)
 # Load the model from Hugging Face Hub
 def load_model_from_hub():
     # Download the model file from Hugging Face
