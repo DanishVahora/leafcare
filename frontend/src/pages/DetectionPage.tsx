@@ -117,6 +117,7 @@ const DetectionPage: React.FC = () => {
 
   return (
     <Layout>
+      <br /><br />
       <div className="container mx-auto px-6 py-12">
         <motion.div
           initial="hidden"

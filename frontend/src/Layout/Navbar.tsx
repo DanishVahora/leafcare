@@ -23,10 +23,9 @@ interface NavbarProps {
 const NAV_LINKS = [
   { name: 'Dashboard', path: '/dashboard', icon: Leaf },
   { name: 'Detection', path: '/detect', icon: Camera },
-  { name: 'History', path: '/history', icon: Clock },
-  { name: 'Models', path: '/models', icon: Cpu },
   { name: 'Docs', path: '/docs', icon: BookOpen },
-  { name: 'Community', path: '/community', icon: Users },
+  { name: 'History', path: '/history', icon: Clock },
+  { name: 'Subscription', path: '/SubToPro', icon: Cpu },
   { name: 'Settings', path: '/settings', icon: Settings },
 ];
 
@@ -146,14 +145,24 @@ export const Navbar: React.FC<NavbarProps> = ({ showFullMenu = true }) => {
                     </AnimatePresence>
                   </div>
                 ) : (
-                  <motion.a
-                    href="/auth"
-                    className="ml-4 px-5 py-2.5 rounded-lg bg-gradient-to-r from-green-600 to-emerald-600 text-white shadow-md hover:shadow-lg transition-all"
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                  >
-                    Get Started
-                  </motion.a>
+                  <div className="flex gap-2 ml-4">
+                    <motion.a
+                      href="/auth"
+                      className="px-5 py-2.5 rounded-lg bg-transparent text-green-600 hover:bg-green-50 transition-colors border border-green-100"
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                    >
+                      Login
+                    </motion.a>
+                    <motion.a
+                      href="/signup"
+                      className="px-5 py-2.5 rounded-lg bg-gradient-to-r from-green-600 to-emerald-600 text-white shadow-md hover:shadow-lg transition-all"
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                    >
+                      Sign Up
+                    </motion.a>
+                  </div>
                 )}
               </div>
 
@@ -221,12 +230,20 @@ export const Navbar: React.FC<NavbarProps> = ({ showFullMenu = true }) => {
                   <span>Sign Out</span>
                 </button>
               ) : (
-                <a
-                  href="/auth"
-                  className="w-full flex items-center justify-center space-x-2 px-4 py-3 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-lg"
-                >
-                  <span>Get Started</span>
-                </a>
+                <div className="space-y-3">
+                  <a
+                    href="/auth"
+                    className="w-full flex items-center justify-center space-x-2 px-4 py-3 text-green-600 hover:bg-green-50 rounded-lg border border-green-100"
+                  >
+                    <span>Login</span>
+                  </a>
+                  <a
+                    href="/signup"
+                    className="w-full flex items-center justify-center space-x-2 px-4 py-3 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-lg"
+                  >
+                    <span>Sign Up</span>
+                  </a>
+                </div>
               )}
             </div>
           </motion.div>
