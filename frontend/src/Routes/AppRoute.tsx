@@ -33,7 +33,7 @@ export const AppRoute = () => {
         {/* Protected routes */}
         <Route path="/dashboard" element={
           // <ProtectedRoute>
-          <Dashboard />
+          <HomePage />
           // </ProtectedRoute>
         } />
 

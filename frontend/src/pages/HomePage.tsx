@@ -5,6 +5,8 @@ import Layout from "../Layout/Layout";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import landingImg from '../assets/landing-img.jpeg'; // <--- Import the image
+
 
 const HomePage: React.FC = () => {
   const [scrollProgress, setScrollProgress] = useState(0);
@@ -92,9 +94,9 @@ const HomePage: React.FC = () => {
 
           {/* Right Image */}
           <div className="flex-1 flex items-center justify-center">
-            <div className="relative w-full max-w-lg">
+            <div className="relative w-full h-full max-w-lg">
               <motion.img
-                src="https://images.pexels.com/photos/5858235/pexels-photo-5858235.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1"
+                src={landingImg}
                 alt="Plant Disease Detection"
                 className="rounded-3xl shadow-2xl w-full h-full object-cover"
                 initial={{ opacity: 0, scale: 0.9 }}
@@ -207,7 +209,7 @@ const HomePage: React.FC = () => {
               <Card className="p-6 shadow-xl rounded-xl bg-white hover:shadow-2xl transition-shadow">
                 <h3 className="text-2xl font-semibold text-green-700 mb-4">Data Preparation</h3>
                 <pre className="text-sm text-gray-700 bg-gray-100 p-4 rounded-lg overflow-x-auto">
-{`training_set = tf.keras.utils.image_dataset_from_directory(
+                  {`training_set = tf.keras.utils.image_dataset_from_directory(
   'train',
   labels="inferred",
   image_size=(128, 128),
@@ -308,7 +310,7 @@ const HomePage: React.FC = () => {
                 <Card className="p-6 shadow-lg rounded-xl bg-white">
                   <h3 className="text-2xl font-semibold text-green-700 mb-4">Training Code</h3>
                   <pre className="text-sm text-gray-700 bg-gray-100 p-4 rounded-lg overflow-x-auto">
-{`model.compile(
+                    {`model.compile(
   optimizer=Adam(learning_rate=0.0001),
   loss='categorical_crossentropy',
   metrics=['accuracy']
