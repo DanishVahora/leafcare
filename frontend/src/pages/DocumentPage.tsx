@@ -33,7 +33,7 @@ export const DocumentPage = () => {
 
           {/* Main Content Tabs */}
           <Tabs defaultValue="overview" className="w-full">
-            <TabsList className="grid w-full grid-cols-3 lg:grid-cols-6 h-auto bg-green-50">
+            <TabsList className="grid w-full grid-cols-4 lg:grid-cols-4 h-auto bg-green-50">
               <TabsTrigger value="overview" className="py-4">
                 <BookOpen className="w-4 h-4 mr-2" />
                 Overview
@@ -45,6 +45,10 @@ export const DocumentPage = () => {
               <TabsTrigger value="methodology">
                 <TestTube2 className="w-4 h-4 mr-2" />
                 Methodology
+              </TabsTrigger>
+              <TabsTrigger value="integration" className="py-4">
+                <BrainCircuit className="w-4 h-4 mr-2" />
+                Model Integration
               </TabsTrigger>
             </TabsList>
 
@@ -276,6 +280,135 @@ export const DocumentPage = () => {
                     </TableBody>
                   </Table>
                 </Card>
+              </div>
+            </TabsContent>
+
+            {/* Model Integration Tab */}
+            <TabsContent value="integration">
+              <div className="space-y-12">
+                {/* Features Section */}
+                <div>
+                  <h3 className="text-2xl font-bold mb-6">Project Features</h3>
+                  <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+                    <Card className="hover:shadow-lg transition-shadow">
+                      <CardHeader>
+                        <CardTitle className="flex items-center gap-3">
+                          <BrainCircuit className="w-6 h-6 text-green-600" />
+                          Automated Model Updates
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <p className="text-gray-600">
+                          Seamlessly integrate new training data to continuously improve detection accuracy.
+                        </p>
+                      </CardContent>
+                    </Card>
+
+                    <Card className="hover:shadow-lg transition-shadow">
+                      <CardHeader>
+                        <CardTitle className="flex items-center gap-3">
+                          <Factory className="w-6 h-6 text-green-600" />
+                          Scalable Deployment
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <p className="text-gray-600">
+                          Deploy the model across cloud infrastructures and IoT devices for real-time monitoring.
+                        </p>
+                      </CardContent>
+                    </Card>
+
+                    <Card className="hover:shadow-lg transition-shadow">
+                      <CardHeader>
+                        <CardTitle className="flex items-center gap-3">
+                          <TestTube2 className="w-6 h-6 text-green-600" />
+                          Real-Time Feedback Loop
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <p className="text-gray-600">
+                          Integrate with farm management systems to provide instant insights and proactive alerts.
+                        </p>
+                      </CardContent>
+                    </Card>
+                  </div>
+                </div>
+
+                {/* Use Cases Section */}
+                <div>
+                  <h3 className="text-2xl font-bold mb-6">Use Cases</h3>
+                  <div className="grid gap-6 md:grid-cols-2">
+                    <Card className="hover:shadow-lg transition-shadow">
+                      <CardHeader>
+                        <CardTitle className="flex items-center gap-3">
+                          <Wheat className="w-6 h-6 text-green-600" />
+                          Precision Farming
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <p className="text-gray-600">
+                          Enable farmers to make informed decisions based on timely disease detection and predictive analytics.
+                        </p>
+                      </CardContent>
+                    </Card>
+
+                    <Card className="hover:shadow-lg transition-shadow">
+                      <CardHeader>
+                        <CardTitle className="flex items-center gap-3">
+                          <LeafyGreen className="w-6 h-6 text-green-600" />
+                          Crop Insurance & Risk Management
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <p className="text-gray-600">
+                          Leverage the model’s insights for efficient claims processing and tailored insurance products.
+                        </p>
+                      </CardContent>
+                    </Card>
+
+                    <Card className="hover:shadow-lg transition-shadow">
+                      <CardHeader>
+                        <CardTitle className="flex items-center gap-3">
+                          <Network className="w-6 h-6 text-green-600" />
+                          Research & Development
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <p className="text-gray-600">
+                          Support academic and industrial research by providing a robust dataset and state-of-the-art model architecture.
+                        </p>
+                      </CardContent>
+                    </Card>
+
+                    <Card className="hover:shadow-lg transition-shadow">
+                      <CardHeader>
+                        <CardTitle className="flex items-center gap-3">
+                          <BookOpen className="w-6 h-6 text-green-600" />
+                          Educational Platforms
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <p className="text-gray-600">
+                          Use the model as a case study in AI-driven agriculture for universities and training institutes.
+                        </p>
+                      </CardContent>
+                    </Card>
+                  </div>
+                </div>
+
+                {/* Additional Scrollable Content */}
+                <div className="mt-12">
+                  <h3 className="text-2xl font-bold mb-6">In-Depth Analysis & Future Roadmap</h3>
+                  <p className="text-gray-600 mb-4">
+                    The PlantPath AI platform is designed to evolve continuously, adapting to new challenges in the agricultural sector. Future plans include integrating advanced analytics, enhanced security features, and extended partnerships with global agri-tech companies. 
+                  </p>
+                  <p className="text-gray-600 mb-4">
+                    By leveraging a modular architecture, the platform ensures each component—from data ingestion and preprocessing to model training and real-time integration—can be updated independently. This provides the flexibility to adopt the latest technologies and best practices as the domain evolves.
+                  </p>
+                  <p className="text-gray-600">
+                    Additionally, user feedback and collaboration with research institutions will drive future enhancements, ensuring the solution remains at the forefront of AI-powered agricultural innovation.
+                  </p>
+                </div>
               </div>
             </TabsContent>
           </Tabs>
