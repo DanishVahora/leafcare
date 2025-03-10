@@ -1,13 +1,16 @@
 import React, { useState } from 'react';
-import {   Eye, EyeOff } from 'lucide-react';
+import { Eye, EyeOff } from 'lucide-react';
 import { Card, CardHeader, CardContent } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
-import { UseAuth } from '@/context/AuthContext';
+import { useAuth } from '@/context/AuthContext';
 import { GoogleLogin, CredentialResponse } from '@react-oauth/google';
 import { jwtDecode } from 'jwt-decode';
-import { User } from '@/types';
 import Layout from '../Layout/Layout';
 import axios from 'axios';
+import { useNavigate, Link } from 'react-router-dom';
+import { API_BASE_URL } from '@/config/config';
+import { googleOAuthConfig } from '@/config/oauthConfig';
+
 interface FormElements extends HTMLFormControlsCollection {
   firstName: HTMLInputElement;
   lastName: HTMLInputElement;
@@ -19,18 +22,35 @@ interface FormElements extends HTMLFormControlsCollection {
 interface SignUpFormElement extends HTMLFormElement {
   readonly elements: FormElements;
 }
+
+// Define proper types for the decoded JWT token
+interface DecodedGoogleToken {
+  sub: string;
+  given_name: string;
+  family_name: string;
+  picture: string;
+  email: string;
+  // Add other fields as needed
+}
+
 export default function SignupPage() {
-  const { login } = UseAuth();
+  const { login } = useAuth();
+  const navigate = useNavigate();
   const [showPassword, setShowPassword] = useState<boolean>(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState<boolean>(false);
+  const [error, setError] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
 
   const handleGoogleSuccess = async (credentialResponse: CredentialResponse) => {
     if (credentialResponse.credential) {
-      const decoded = jwtDecode<User>(credentialResponse.credential);
+      setIsSubmitting(true);
+      setError(null);
       
       try {
-        // Send Google OAuth data to backend
-        const response = await axios.post('http://localhost:5000/api/auth/oauth/login', {
+        const decoded = jwtDecode<DecodedGoogleToken>(credentialResponse.credential);
+
+        // Send Google OAuth data to backend using the API_BASE_URL
+        const response = await axios.post(`${API_BASE_URL}/auth/oauth/login`, {
           provider: 'google',
           providerId: decoded.sub,
           email: decoded.email,
@@ -47,60 +67,102 @@ export default function SignupPage() {
         navigate('/dashboard');
       } catch (error) {
         console.error('Google OAuth login failed:', error);
-        setError('Failed to authenticate with Google');
+        if (axios.isAxiosError(error) && error.response) {
+          setError(error.response.data?.message || 'Failed to authenticate with Google');
+        } else {
+          setError('Failed to authenticate with Google');
+        }
+      } finally {
+        setIsSubmitting(false);
       }
     }
   };
 
-  const handleGoogleError = () => {
-    console.error('Google Sign Up Failed');
+  const validateForm = (form: FormElements): string | null => {
+    const password = form.password.value;
+    const confirmPassword = form.confirmPassword.value;
+    
+    if (password !== confirmPassword) {
+      return "Passwords don't match";
+    }
+    
+    if (password.length < 8) {
+      return "Password must be at least 8 characters long";
+    }
+    
+    return null;
   };
 
   const handleEmailSignUp = async (e: React.FormEvent<SignUpFormElement>) => {
     e.preventDefault();
-    const form = e.currentTarget;
+    const form = e.currentTarget.elements;
+    
+    // Validate form
+    const validationError = validateForm(form);
+    if (validationError) {
+      setError(validationError);
+      return;
+    }
+    
+    setIsSubmitting(true);
+    setError(null);
+    
     const formData = {
-      firstName: form.elements.firstName.value,
-      lastName: form.elements.lastName.value,
-      email: form.elements.email.value,
-      password: form.elements.password.value,
+      firstName: form.firstName.value,
+      lastName: form.lastName.value,
+      email: form.email.value,
+      password: form.password.value,
     };
-  
+
     try {
-      const response = await axios.post('http://localhost:5000/api/auth/signup', formData);
-  
+      const response = await axios.post(`${API_BASE_URL}/auth/signup`, formData);
+
       if (response.status === 201) {
         // Assuming the backend returns user details & token after signup
         const { user, token } = response.data;
-  
+
         // Store the token (optional: in localStorage for persistence)
         login(user);
-      localStorage.setItem("token", token);
-  
+        localStorage.setItem("token", token);
+
         console.log('Signup successful, user logged in:', user);
+        navigate('/dashboard');
       }
-    } catch (error) {
-      console.error('Signup failed:', error.response?.data || error.message);
+    } catch (err) {
+      if (axios.isAxiosError(err) && err.response) {
+        setError(err.response.data?.message || 'Signup failed');
+      } else {
+        setError('An unexpected error occurred');
+      }
+      console.error('Signup failed:', err);
+    } finally {
+      setIsSubmitting(false);
     }
   };
-  
+
   return (
     <Layout showFullMenu={false}>
       {/* Main Content */}
       <div className="flex-1 flex items-center justify-center px-6 py-12">
         <Card className="w-full max-w-md">
           <CardHeader className="space-y-1 text-center">
-            
             <h2 className="text-2xl font-semibold tracking-tight">Create an account</h2>
             <p className="text-sm text-gray-500">
               Get started with PlantCare
             </p>
           </CardHeader>
           <CardContent className="space-y-4">
+            {error && (
+              <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative" role="alert">
+                <span className="block sm:inline">{error}</span>
+              </div>
+            )}
             <div className="w-full flex justify-center">
               <GoogleLogin
                 onSuccess={handleGoogleSuccess}
-                onError={handleGoogleError}
+                onError={() => {
+                  setError(googleOAuthConfig.handleOAuthError("Google authentication failed"));
+                }}
                 theme="outline"
                 size="large"
                 type="standard"
@@ -227,17 +289,18 @@ export default function SignupPage() {
 
               <button
                 type="submit"
-                className="w-full bg-green-600 hover:bg-green-700 text-white font-medium py-3 rounded-lg transition-colors"
+                disabled={isSubmitting}
+                className="w-full bg-green-600 hover:bg-green-700 text-white font-medium py-3 rounded-lg transition-colors disabled:opacity-70"
               >
-                Create Account
+                {isSubmitting ? 'Creating Account...' : 'Create Account'}
               </button>
             </form>
 
             <p className="text-center text-sm text-gray-500">
               Already have an account?{' '}
-              <a href="#" className="font-medium text-green-600 hover:text-green-500">
+              <Link to="/auth" className="font-medium text-green-600 hover:text-green-500">
                 Sign in
-              </a>
+              </Link>
             </p>
           </CardContent>
         </Card>

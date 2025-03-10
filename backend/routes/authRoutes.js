@@ -1,6 +1,6 @@
 const express = require('express');
 const { signup, login } = require('../controllers/authController'); // Import controllers
-const { oauthLogin } = require('../controllers/OauthController');
+const { oauthLogin } = require('../controllers/Oauthcontroller');
  const router = express.Router();
 
 // Routes

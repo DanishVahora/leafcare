@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { UseAuth } from '../context/AuthContext';
+import { useAuth } from '../context/AuthContext';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Leaf,
@@ -7,7 +7,6 @@ import {
   Clock,
   Cpu,
   BookOpen,
-  Users,
   Settings,
   LogOut,
   User,
@@ -30,7 +29,7 @@ const NAV_LINKS = [
 ];
 
 export const Navbar: React.FC<NavbarProps> = ({ showFullMenu = true }) => {
-  const { user, logout } = UseAuth();
+  const { user, logout } = useAuth();
   const [isOpen, setIsOpen] = useState(false);
   const [lastScroll, setLastScroll] = useState(0);
   const [hidden, setHidden] = useState(false);

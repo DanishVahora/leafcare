@@ -1,42 +1,73 @@
-import { createContext, useContext, useEffect, useState } from "react";
+import React, { createContext, useState, useContext, ReactNode } from 'react';
+import { useNavigate } from 'react-router-dom';
 
-const AuthContext = createContext({ 
-  user: null, 
-  login: (user: string | number | boolean | null | undefined) => {}, 
-  logout: () => {} 
+// Define user type
+type User = {
+  id: string;
+  email: string;
+  firstName: string;
+  lastName: string;
+  photo?: string;
+  // Add other user fields as needed
+};
+
+// Define context type
+type AuthContextType = {
+  user: User | null;
+  login: (user: User) => void;
+  logout: () => void;
+  isAuthenticated: boolean;
+};
+
+// Create context with default values
+const AuthContext = createContext<AuthContextType>({
+  user: null,
+  login: () => {},
+  logout: () => {},
+  isAuthenticated: false,
 });
 
-export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
-  const [user, setUser] = useState(() => {
-    const storedUser = localStorage.getItem("user");
-    return storedUser ? JSON.parse(storedUser) : null;
-  });
+// Custom hook to use auth context
+export const useAuth = () => useContext(AuthContext);
 
-  const login = (userData: string | number | boolean | null | undefined) => {
+// Auth provider component
+export const AuthProvider = ({ children }: { children: ReactNode }) => {
+  const navigate = useNavigate();
+  const [user, setUser] = useState<User | null>(null);
+
+  // Check if user is already logged in (from localStorage or elsewhere)
+  React.useEffect(() => {
+    const token = localStorage.getItem('token');
+    const storedUser = localStorage.getItem('user');
+    
+    if (token && storedUser) {
+      try {
+        setUser(JSON.parse(storedUser));
+      } catch (error) {
+        console.error('Failed to parse stored user data');
+        localStorage.removeItem('user');
+        localStorage.removeItem('token');
+        console.error(error);
+      }
+    }
+  }, []);
+
+  const login = (userData: User) => {
     setUser(userData);
-    localStorage.setItem("user", JSON.stringify(userData)); // Save user in localStorage
+    // Store user data for persistence
+    localStorage.setItem('user', JSON.stringify(userData));
   };
 
   const logout = () => {
     setUser(null);
-    localStorage.removeItem("user");
-    localStorage.removeItem("token");
-    navigate("/login");
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    navigate('/auth');
   };
-  
-
-  useEffect(() => {
-    const storedUser = localStorage.getItem("user");
-    if (storedUser) {
-      setUser(JSON.parse(storedUser));
-    }
-  }, []);
 
   return (
-    <AuthContext.Provider value={{ user, login, logout }}>
+    <AuthContext.Provider value={{ user, login, logout, isAuthenticated: !!user }}>
       {children}
     </AuthContext.Provider>
   );
 };
-
-export const UseAuth = () => useContext(AuthContext);

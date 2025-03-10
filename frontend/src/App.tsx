@@ -1,20 +1,19 @@
-
-import { AuthProvider } from "./context/AuthContext"
-import { GoogleOAuthProvider } from "@react-oauth/google"
-import { useTheme } from 'next-themes'
-import AppRoute from "./Routes/AppRoute"
-import './index.css'
+import { BrowserRouter } from 'react-router-dom';
+import { GoogleOAuthProvider } from '@react-oauth/google';
+import { AuthProvider } from './context/AuthContext';
+import AppRoute from './Routes/AppRoute'; 
+import { googleOAuthConfig } from './config/oauthConfig';
 
 function App() {
-  useTheme()
-  const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
   return (
-    <AuthProvider>
-      <GoogleOAuthProvider clientId={googleClientId}>
-          <AppRoute/>
-     </GoogleOAuthProvider>
-    </AuthProvider>
-  )
+    <BrowserRouter>
+      <GoogleOAuthProvider clientId={googleOAuthConfig.googleClientId}>
+        <AuthProvider>
+          <AppRoute />
+        </AuthProvider>
+      </GoogleOAuthProvider>
+    </BrowserRouter>
+  );
 }
 
-export default App
+export default App;
