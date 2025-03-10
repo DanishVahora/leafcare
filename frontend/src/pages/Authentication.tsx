@@ -8,6 +8,7 @@ import { User } from './types';
 import Layout from '../Layout/Layout';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
+import { API_BASE_URL } from '../config/config';
 
 interface FormElements extends HTMLFormControlsCollection {
   email: HTMLInputElement;
@@ -27,7 +28,7 @@ const Authentication = () => {
       const decoded = jwtDecode<User>(credentialResponse.credential);
   
       try {
-        const response = await axios.post('http://localhost:5000/api/auth/oauth/login', {
+        const response = await axios.post(`${API_BASE_URL}/auth/oauth/login`, {
           provider: 'google',
           providerId: decoded.sub,
           email: decoded.email,
@@ -52,7 +53,6 @@ const Authentication = () => {
     }
   };
   
-  
   const handleEmailSignIn = async (e: React.FormEvent<SignInFormElement>) => {
     e.preventDefault();
     setError('');
@@ -62,7 +62,7 @@ const Authentication = () => {
     const password = form.elements.password.value;
   
     try {
-      const response = await axios.post('http://localhost:5000/api/auth/login', {
+      const response = await axios.post(`${API_BASE_URL}/auth/login`, {
         email,
         password,
       });

@@ -8,6 +8,7 @@ import { jwtDecode } from 'jwt-decode';
 import Layout from '../Layout/Layout';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
+import { API_BASE_URL } from '@/config/config';
 
 interface FormElements extends HTMLFormControlsCollection {
   firstName: HTMLInputElement;
@@ -43,8 +44,8 @@ export default function SignupPage() {
       const decoded = jwtDecode<DecodedGoogleToken>(credentialResponse.credential);
 
       try {
-        // Send Google OAuth data to backend
-        const response = await axios.post('http://localhost:5000/api/auth/oauth/login', {
+        // Send Google OAuth data to backend using the API_BASE_URL
+        const response = await axios.post(`${API_BASE_URL}/auth/oauth/login`, {
           provider: 'google',
           providerId: decoded.sub,
           email: decoded.email,
@@ -81,7 +82,7 @@ export default function SignupPage() {
     };
 
     try {
-      const response = await axios.post('http://localhost:5000/api/auth/signup', formData);
+      const response = await axios.post(`${API_BASE_URL}/auth/signup`, formData);
 
       if (response.status === 201) {
         // Assuming the backend returns user details & token after signup
