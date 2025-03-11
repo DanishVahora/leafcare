@@ -5,13 +5,15 @@ import Layout from "../Layout/Layout";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import landingImg from '../assets/landing-img.jpeg'; // <--- Import the image
+import landingImg from '../assets/landing-img.jpeg'; 
+import { useNavigate } from "react-router-dom";
 
 
 const HomePage: React.FC = () => {
   const [scrollProgress, setScrollProgress] = useState(0);
   const [isAboutExpanded, setIsAboutExpanded] = useState(false);
   const [isTrainingExpanded, setIsTrainingExpanded] = useState(false);
+  const navigate = useNavigate()
 
   useEffect(() => {
     const handleScroll = () => {
@@ -82,11 +84,11 @@ const HomePage: React.FC = () => {
               Our state-of-the-art AI model, trained on thousands of plant images, delivers rapid and precise disease detection to help safeguard your crops.
             </p>
             <div className="flex items-center gap-4">
-              <Button className="group flex items-center gap-2 px-8 py-4 rounded-xl text-lg font-semibold transition hover:bg-green-700 shadow-lg hover:shadow-green-200">
+              <Button className="group flex items-center gap-2 px-8 py-4 rounded-xl text-lg font-semibold transition hover:bg-green-700 shadow-lg hover:shadow-green-200" onClick={() => navigate('/detect')}>
                 Get Started
                 <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
               </Button>
-              <Button variant="ghost" className="px-6 py-4 rounded-xl text-lg font-semibold shadow-sm">
+              <Button variant="ghost" className="px-6 py-4 rounded-xl text-lg font-semibold shadow-sm" onClick={() => navigate('/docs')}>
                 Learn More
               </Button>
             </div>

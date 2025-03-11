@@ -22,7 +22,7 @@ export const DocumentPage = () => {
                 <LeafyGreen className="w-10 h-10 text-green-700" />
               </div>
               <h1 className="text-5xl font-extrabold text-gray-900 tracking-tight">
-                PlantPath AI - Technical Documentation
+                LeafCare AI - Technical Documentation
               </h1>
             </div>
             <p className="text-xl text-gray-700 max-w-3xl mx-auto transition-colors duration-500">
