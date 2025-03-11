@@ -112,7 +112,7 @@ const SubscribePro: React.FC = () => {
     
     // This would typically come from your backend
     const paymentData = {
-      key: "rzp_test_Lj9ueukNDVBw5I", // Replace with your actual test key
+      key: import.meta.env.VITE_RAZORPAY_API_KEY, // Replace with your actual test key
       amount: amount * 100, // Amount in smallest currency unit (paise)
       currency: "INR",
       name: "Plant Disease Detection " + selectedPlan.charAt(0).toUpperCase() + selectedPlan.slice(1),
