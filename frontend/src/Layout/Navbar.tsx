@@ -100,9 +100,9 @@ export const Navbar: React.FC<NavbarProps> = ({ showFullMenu = true }) => {
                       whileHover={{ scale: 1.05 }}
                     >
                       <div className="relative">
-                        <div className="absolute inset-0 rounded-full bg-gradient-to-tr from-green-500 to-emerald-600 opacity-0 group-hover:opacity-100 transition-opacity" />
+                        <div className="absolute inset-0 rounded-full opacity-0 group-hover:opacity-100 transition-opacity" />
                         <img
-                          src={user.photo || '/default-avatar.svg'}
+                          src={user.photo || '/user-profile.svg'}
                           alt="Profile"
                           className="h-9 w-9 rounded-full border-2 border-green-100 group-hover:border-transparent transition-all"
                         />
@@ -195,7 +195,7 @@ export const Navbar: React.FC<NavbarProps> = ({ showFullMenu = true }) => {
                 <div className="pb-4 border-b border-green-100">
                   <div className="flex items-center space-x-3">
                     <img
-                      src={user.photo || '/default-avatar.svg'}
+                      src={user.photo || '/user-profile.svg'}
                       alt="Profile"
                       className="h-10 w-10 rounded-full border-2 border-green-600"
                     />
