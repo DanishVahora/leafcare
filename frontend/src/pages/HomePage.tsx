@@ -2,7 +2,6 @@ import React, { useEffect, useState } from "react";
 import { ArrowRight, ChevronDown, ChevronUp } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import Layout from "../Layout/Layout";
-import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import landingImg from '../assets/landing-img.jpeg'; // <--- Import the image
