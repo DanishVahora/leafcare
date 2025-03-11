@@ -81,15 +81,16 @@ const HomePage: React.FC = () => {
             <p className="text-xl text-gray-600 max-w-lg leading-relaxed">
               Our state-of-the-art AI model, trained on thousands of plant images, delivers rapid and precise disease detection to help safeguard your crops.
             </p>
-            <div className="flex items-center gap-4">
-              <Button className="group flex items-center gap-2 px-8 py-4 rounded-xl text-lg font-semibold transition hover:bg-green-700 shadow-lg hover:shadow-green-200">
+            <div className="flex flex-col sm:flex-row items-center gap-4">
+              <button className="w-full sm:w-auto bg-green-600 hover:bg-green-700 text-white font-medium px-6 py-3 rounded-md transition-all duration-200 flex items-center justify-center gap-2 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-opacity-50 shadow-md">
                 Get Started
-                <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
-              </Button>
-              <Button variant="ghost" className="px-6 py-4 rounded-xl text-lg font-semibold shadow-sm">
+                <ArrowRight className="w-4 h-4 transform group-hover:translate-x-1 transition-transform" />
+              </button>
+      
+              <button className="w-full sm:w-auto bg-transparent hover:bg-green-50 text-green-800 font-medium px-6 py-3 rounded-md border border-green-300 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-green-300 focus:ring-opacity-50">
                 Learn More
-              </Button>
-            </div>
+              </button>
+         </div>
           </div>
 
           {/* Right Image */}
