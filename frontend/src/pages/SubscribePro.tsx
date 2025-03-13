@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { motion, AnimatePresence, useScroll, useTransform } from "framer-motion";
+import { motion,  useScroll, useTransform } from "framer-motion";
 import { CheckCircle, ArrowRight, ShieldCheck, Gift, Clock, Loader2, Leaf, Sparkles } from "lucide-react";
 import { BarChart3, FileText, History, Headset, Code, Scan } from "lucide-react";
 import Layout from "../Layout/Layout";
@@ -207,11 +207,11 @@ const SubscribePro: React.FC = () => {
     }
   };
 
-  const slideUp = {
-    hidden: { height: 0, opacity: 0 },
-    visible: { height: "auto", opacity: 1 },
-    exit: { height: 0, opacity: 0 }
-  };
+  // const slideUp = {
+  //   hidden: { height: 0, opacity: 0 },
+  //   visible: { height: "auto", opacity: 1 },
+  //   exit: { height: 0, opacity: 0 }
+  // };
 
   return (
     <Layout>
@@ -252,7 +252,7 @@ const SubscribePro: React.FC = () => {
 
           <motion.h1 variants={fadeInUp} className="text-4xl md:text-5xl font-bold text-gray-900 mb-6">
             Elevate Your Plant Care with
-            <span className="block text-green-600 mt-2 bg-clip-text text-transparent bg-gradient-to-r from-green-600 to-emerald-600">
+            <span className="block text-green-600 mt-2 bg-clip-text  bg-gradient-to-r from-green-600 to-emerald-600">
               LeafCare Pro
             </span>
           </motion.h1>
