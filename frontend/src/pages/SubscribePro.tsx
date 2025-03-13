@@ -1,5 +1,7 @@
-import React, { useState } from "react";
-import { CheckCircle, ArrowRight, ShieldCheck, Gift, Clock } from "lucide-react";
+import React, { useState, useEffect } from "react";
+import { motion, AnimatePresence, useScroll, useTransform } from "framer-motion";
+import { CheckCircle, ArrowRight, ShieldCheck, Gift, Clock, Loader2, Leaf, Sparkles } from "lucide-react";
+import { BarChart3, FileText, History, Headset, Code, Scan } from "lucide-react";
 import Layout from "../Layout/Layout";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -14,40 +16,71 @@ declare global {
   }
 }
 
+const ScrollProgress = () => {
+  const { scrollYProgress } = useScroll();
+  const width = useTransform(scrollYProgress, [0, 1], ['0%', '100%']);
+
+  return (
+    <motion.div
+      className="fixed top-0 left-0 h-1 bg-green-500 z-50"
+      style={{ width }}
+    />
+  );
+};
+
 const SubscribePro: React.FC = () => {
   const [paymentPeriod, setPaymentPeriod] = useState<"monthly" | "annual">("annual");
   const [isLoading, setIsLoading] = useState(false);
   const [email, setEmail] = useState("");
   const [couponCode, setCouponCode] = useState("");
   const [discountApplied, setDiscountApplied] = useState(false);
-  
-  const handlePayment = () => {
+  const [paymentError, setPaymentError] = useState<string | null>(null);
+  const [scrollProgress, setScrollProgress] = useState(0);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      const totalScroll = document.documentElement.scrollTop || document.body.scrollTop;
+      const windowHeight = document.documentElement.scrollHeight - document.documentElement.clientHeight;
+      setScrollProgress((totalScroll / windowHeight) * 100);
+    };
+
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
+
+  const loadRazorpayScript = () => {
+    return new Promise<boolean>((resolve, reject) => {
+      const script = document.createElement('script');
+      script.src = "https://checkout.razorpay.com/v1/checkout.js";
+      script.onload = () => resolve(true);
+      script.onerror = () => reject(new Error("Razorpay SDK failed to load."));
+      document.body.appendChild(script);
+    });
+  };
+
+  const handlePayment = async () => {
     if (!email) {
       return;
     }
-    
+
     setIsLoading(true);
-    
+
     let amount = paymentPeriod === "monthly" ? 999 : 9990;
-    
-    // Apply discount if coupon is valid
+
     if (discountApplied) {
-      amount = Math.floor(amount * 0.85); // 15% discount
+      amount = Math.floor(amount * 0.85);
     }
-    
-    // This would typically come from your backend
+
     const paymentData = {
       key: import.meta.env.VITE_RAZORPAY_API_KEY,
-      amount: amount * 100, // Amount in smallest currency unit (paise)
+      amount: amount * 100,
       currency: "INR",
-      name: "LeafCare Pro",
+      name: "Plant Disease Detection Pro",
       description: paymentPeriod === "monthly" ? "Monthly Subscription" : "Annual Subscription",
       image: "/logo.png",
       handler: function (response: unknown) {
         setIsLoading(false);
         console.log("Payment success:", response);
-        // Here you would typically call your backend to verify the payment
-        // and activate the subscription
       },
       prefill: {
         name: "",
@@ -58,28 +91,34 @@ const SubscribePro: React.FC = () => {
         color: "#22c55e"
       },
       modal: {
-        ondismiss: function() {
+        ondismiss: function () {
           setIsLoading(false);
         }
       }
     };
 
     try {
+      await loadRazorpayScript();
+
+      if (!window.Razorpay) {
+        throw new Error("Razorpay SDK not available");
+      }
+
       const razorpay = new window.Razorpay(paymentData);
       razorpay.open();
     } catch (error) {
       console.error("Razorpay error:", error);
       setIsLoading(false);
+      setPaymentError("Payment failed. Please try again.");
     }
   };
-  
+
   const handleApplyCoupon = () => {
     if (couponCode.toUpperCase() === "PLANT15" || couponCode.toUpperCase() === "NEWYEAR") {
       setDiscountApplied(true);
     }
   };
 
-  // Core benefits as specified
   const benefits = [
     {
       title: "Unlimited Scans",
@@ -105,6 +144,14 @@ const SubscribePro: React.FC = () => {
       title: "API Access",
       description: "Integrate our AI directly into your own applications"
     }
+  ];
+  const benefitIcons = [
+    <Scan className="w-6 h-6 text-green-600" />,
+    <BarChart3 className="w-6 h-6 text-green-600" />,
+    <FileText className="w-6 h-6 text-green-600" />,
+    <History className="w-6 h-6 text-green-600" />,
+    <Headset className="w-6 h-6 text-green-600" />,
+    <Code className="w-6 h-6 text-green-600" />,
   ];
 
   const planDetails = {
@@ -140,34 +187,90 @@ const SubscribePro: React.FC = () => {
     }
   ];
 
+  const fadeInUp = {
+    hidden: { opacity: 0, y: 20 },
+    visible: {
+      opacity: 1,
+      y: 0,
+      transition: { duration: 0.6 }
+    }
+  };
+
+  const staggerItems = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.2,
+        delayChildren: 0.3
+      }
+    }
+  };
+
+  const slideUp = {
+    hidden: { height: 0, opacity: 0 },
+    visible: { height: "auto", opacity: 1 },
+    exit: { height: 0, opacity: 0 }
+  };
+
   return (
     <Layout>
+      <ScrollProgress />
+
+      <div className="fixed top-0 left-0 right-0 z-50 h-1 bg-gray-200">
+        <div
+          className="h-full bg-green-600 transition-all duration-200"
+          style={{ width: `${scrollProgress}%` }}
+        />
+      </div>
+
+      {/* Animated Background Gradient */}
+      <div className="absolute inset-0 -z-10">
+        <div className="absolute inset-0 bg-gradient-to-br from-green-50 to-green-100 animate-[gradientShift_10s_infinite]" />
+        <div className="absolute top-1/4 left-1/4 w-1/2 h-1/2 bg-green-200 rounded-full filter blur-3xl opacity-20 animate-pulse" />
+      </div>
+
       {/* HERO SECTION */}
-      <section className="container mx-auto px-6 py-16 bg-gradient-to-b from-green-50 to-white">
-        <div className="flex flex-col items-center text-center max-w-4xl mx-auto">
-          <Badge variant="outline" className="bg-green-100 text-green-800 mb-6">Premium Features</Badge>
-          
-          <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-6">
+      <motion.section
+        initial="hidden"
+        animate="visible"
+        variants={fadeInUp}
+        transition={{ duration: 0.6 }}
+        className="container mx-auto px-6 py-16 relative overflow-hidden"
+      >
+        <div className="absolute right-0 top-0 opacity-10 -translate-y-1/3">
+          <Leaf className="w-[800px] h-[800px] text-green-200" />
+        </div>
+
+        <div className="flex flex-col items-center text-center max-w-4xl mx-auto relative">
+          <motion.div variants={fadeInUp}>
+            <Badge variant="outline" className="bg-green-100 text-green-800 mb-6">
+              <Sparkles className="w-4 h-4 mr-2" />
+              Premium Features
+            </Badge>
+          </motion.div>
+
+          <motion.h1 variants={fadeInUp} className="text-4xl md:text-5xl font-bold text-gray-900 mb-6">
             Elevate Your Plant Care with
-            <span className="block text-green-600 mt-2">
-              "LeafCare Pro"
+            <span className="block text-green-600 mt-2 bg-clip-text text-transparent bg-gradient-to-r from-green-600 to-emerald-600">
+              LeafCare Pro
             </span>
-          </h1>
-          
+          </motion.h1>
+
           <p className="text-xl text-gray-600 max-w-2xl mx-auto mb-8">
             Get advanced features, unlimited scans, and premium support to better protect your crops and maximize your yield.
           </p>
-          
-          <Button 
-            className="bg-green-600 hover:bg-green-700 text-white font-medium px-6 py-3 rounded-md transition-all duration-200 flex items-center justify-center gap-2"
+
+          <Button
+            className="bg-green-600 hover:bg-green-700 text-white font-medium px-6 py-3 rounded-md transition-all duration-200 flex items-center justify-center gap-2 shadow-md hover:shadow-lg"
             onClick={() => {
               document.getElementById('pricing-section')?.scrollIntoView({ behavior: 'smooth' });
             }}
           >
             View Plans
-            <ArrowRight className="w-5 h-5" />
+            <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
           </Button>
-          
+
           <div className="flex flex-wrap justify-center items-center gap-4 mt-8">
             {["Premium Support", "Money-back Guarantee", "Secure Payment"].map((item, index) => (
               <div key={index} className="flex items-center gap-2 text-gray-600">
@@ -177,30 +280,47 @@ const SubscribePro: React.FC = () => {
             ))}
           </div>
         </div>
-      </section>
+      </motion.section>
 
       {/* BENEFITS SECTION */}
-      <section className="py-16 px-6 bg-white">
+      <motion.section
+        initial="hidden"
+        whileInView="visible"
+        viewport={{ once: true }}
+        variants={staggerItems}
+        className="py-16 px-6 bg-white"
+      >
         <div className="max-w-6xl mx-auto">
-          <div className="text-center mb-16">
+          <motion.div variants={fadeInUp} className="text-center mb-16">
             <h2 className="text-3xl font-bold text-green-800 mb-4">
               Pro Features for Better Plant Health
             </h2>
             <p className="text-lg text-gray-600 max-w-2xl mx-auto">
               Our professional tools help you monitor and maintain optimal plant health
             </p>
-          </div>
+          </motion.div>
 
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
             {benefits.map((benefit, index) => (
-              <Card key={index} className="p-6 shadow-md rounded-xl bg-white h-full flex flex-col hover:shadow-lg transition-shadow">
-                <h3 className="text-xl font-semibold text-green-700 mb-2">{benefit.title}</h3>
-                <p className="text-gray-600 flex-grow">{benefit.description}</p>
-              </Card>
+              <motion.div
+                key={index}
+                variants={fadeInUp}
+                whileHover={{ y: -5 }}
+                transition={{ duration: 0.3 }}
+              >
+                <Card className="p-6 shadow-lg rounded-xl bg-white h-full flex flex-col hover:shadow-xl transition-all">
+                  <div className="bg-green-100 w-fit p-3 rounded-lg mb-4 transition-colors group-hover:bg-green-200">
+                    {benefitIcons[index]}
+                  </div>
+                  <h3 className="text-xl font-semibold text-green-700 mb-2">{benefit.title}</h3>
+                  <p className="text-gray-600 flex-grow">{benefit.description}</p>
+                </Card>
+              </motion.div>
             ))}
           </div>
+
         </div>
-      </section>
+      </motion.section>
 
       {/* PRICING SECTION */}
       <section id="pricing-section" className="py-16 px-6 bg-gray-50">
@@ -215,8 +335,8 @@ const SubscribePro: React.FC = () => {
           </div>
 
           <div className="mb-12">
-            <Tabs 
-              defaultValue="annual" 
+            <Tabs
+              defaultValue="annual"
               className="w-80 mx-auto"
               onValueChange={(value) => setPaymentPeriod(value as "monthly" | "annual")}
             >
@@ -232,7 +352,7 @@ const SubscribePro: React.FC = () => {
               <div>
                 <h3 className="text-2xl font-bold text-gray-900">Plant Disease Detection Pro</h3>
                 <p className="text-gray-500 mt-1">All features included</p>
-                
+
                 <div className="flex items-baseline gap-2 mt-4">
                   <span className="text-4xl font-extrabold text-green-600">
                     {paymentPeriod === "monthly" ? planDetails.monthly.price : planDetails.annual.price}
@@ -244,33 +364,44 @@ const SubscribePro: React.FC = () => {
                     {paymentPeriod === "monthly" ? planDetails.monthly.period : planDetails.annual.period}
                   </span>
                 </div>
-                
+
                 {paymentPeriod === "annual" && (
                   <p className="text-green-600 font-medium mt-2">
                     {planDetails.annual.savings}
                   </p>
                 )}
               </div>
-              
+
               <div>
-                <Input 
-                  type="email" 
-                  placeholder="Enter your email" 
+                <Input
+                  type="email"
+                  placeholder="Enter your email"
                   className="mb-3"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                 />
-                
-                <Button 
+
+                <Button
                   className="w-full bg-green-600 hover:bg-green-700 text-white"
                   onClick={handlePayment}
                   disabled={isLoading}
                 >
-                  {isLoading ? "Processing..." : "Subscribe Now"}
+                  {isLoading ? (
+                    <div className="flex items-center gap-2">
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      Loading Razorpay...
+                    </div>
+                  ) : (
+                    "Subscribe Now"
+                  )}
                 </Button>
+
+                {paymentError && (
+                  <p className="text-red-500 text-sm mt-2">{paymentError}</p>
+                )}
               </div>
             </div>
-            
+
             <div className="border-t border-gray-200 pt-6">
               <h4 className="font-medium text-gray-700 mb-4">All plans include:</h4>
               <div className="grid md:grid-cols-2 gap-x-8 gap-y-3">
@@ -282,18 +413,18 @@ const SubscribePro: React.FC = () => {
                 ))}
               </div>
             </div>
-            
+
             <div className="flex flex-col sm:flex-row justify-between items-center gap-4 mt-6 pt-6 border-t border-gray-200">
               <div className="flex items-center gap-2">
-                <Input 
-                  placeholder="Coupon code" 
+                <Input
+                  placeholder="Coupon code"
                   className="w-40"
                   value={couponCode}
                   onChange={(e) => setCouponCode(e.target.value)}
                   disabled={discountApplied}
                 />
-                <Button 
-                  variant="outline" 
+                <Button
+                  variant="outline"
                   onClick={handleApplyCoupon}
                   disabled={!couponCode || discountApplied}
                 >
@@ -303,7 +434,7 @@ const SubscribePro: React.FC = () => {
                   <span className="text-green-600 text-sm">15% off applied!</span>
                 )}
               </div>
-              
+
               <div className="flex flex-wrap justify-center items-center gap-4 text-sm text-gray-600">
                 <div className="flex items-center gap-1">
                   <ShieldCheck className="w-4 h-4" />
@@ -352,7 +483,7 @@ const SubscribePro: React.FC = () => {
           <p className="text-xl mb-6 text-green-100 max-w-2xl mx-auto">
             Join thousands of growers who have already improved their yields with our AI-powered solution.
           </p>
-          
+
           <Button
             className="bg-white text-green-700 hover:bg-green-50 px-8 py-3 text-lg font-semibold"
             onClick={() => {
@@ -361,7 +492,7 @@ const SubscribePro: React.FC = () => {
           >
             Get Started Today
           </Button>
-          
+
           <div className="mt-8 flex flex-wrap justify-center gap-8">
             <div className="flex items-center gap-2">
               <ShieldCheck className="w-5 h-5" />
