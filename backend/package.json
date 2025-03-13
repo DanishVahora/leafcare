@@ -16,7 +16,8 @@
     "helmet": "^8.0.0",
     "jsonwebtoken": "^9.0.2",
     "mongoose": "^8.9.5",
-    "node": "^18.20.6"
+    "node": "^18.20.6",
+    "razorpay": "^2.9.6"
   },
   "keywords": [],
   "description": ""
