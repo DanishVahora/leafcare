@@ -216,6 +216,7 @@ const HistoryPage: React.FC = () => {
       </div>
     </Layout>
   );
+  setSpeechSynthRef(null)
 };
 
 const dummyDetectionHistory: DetectionRecord[] = [
