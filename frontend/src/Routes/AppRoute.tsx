@@ -9,12 +9,9 @@ import PlantAnalyze from '../pages/PlantAnalyzer';
 import DetectionPage from '@/pages/DetectionPage';
 import SubscribePro from '@/pages/SubscribePro';
 import {DocumentPage} from '@/pages/DocumentPage';
-<<<<<<< HEAD
 import { SubscriptionManager } from '@/components/SubscriptionManager';
-=======
 import HistoryPage from '@/pages/HistoryPage';
 
->>>>>>> 396ebaed40c6dcc130bdec66a43c2628fceb5a87
 export const AppRoute = () => {
   return (
     <Routes>

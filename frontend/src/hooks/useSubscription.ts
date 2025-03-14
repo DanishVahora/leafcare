@@ -1,12 +1,14 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { subscriptionService } from '@/services/subscriptionService';
 import { SubscriptionDetails, SubscriptionPlan, OrderResponse, PaymentVerificationData } from '@/types/subscription';
 import { useAuth } from '@/context/AuthContext';
+import { toast } from 'sonner';
 
 export const useSubscription = () => {
+  const [subscription, setSubscription] = useState<SubscriptionDetails | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const { user } = useAuth();
+  const { user, isAuthenticated } = useAuth();
 
   // Get subscription plans
   const getPlans = useCallback(async () => {
@@ -121,14 +123,51 @@ export const useSubscription = () => {
 
   // Track feature usage
   const trackUsage = useCallback(async (feature: 'scan' | 'export' | 'apiCall') => {
+    if (!isAuthenticated) {
+      console.warn("Cannot track usage for unauthenticated users");
+      return;
+    }
+
     try {
       await subscriptionService.trackUsage(feature);
-    } catch (err) {
-      console.error('Failed to track feature usage:', err);
+      // If we're tracking scan usage and we have user data, update the local user data
+      if (feature === 'scan' && user && user.usageStats) {
+        // Note: We're not updating the local user state here because the AuthContext
+        // should handle fetching fresh user data periodically or on important actions
+      }
+      return true;
+    } catch (error) {
+      console.error(`Error tracking ${feature} usage:`, error);
+      throw error;
     }
-  }, []);
+  }, [isAuthenticated, user]);
+
+  // Fetch subscription details
+  const fetchSubscription = useCallback(async () => {
+    if (!isAuthenticated) return;
+    
+    setLoading(true);
+    try {
+      const data = await subscriptionService.getUserSubscription();
+      setSubscription(data.subscription);
+      setError(null);
+    } catch (err) {
+      setError("Failed to fetch subscription details");
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  }, [isAuthenticated]);
+
+  // Load subscription on mount and when auth state changes
+  useEffect(() => {
+    if (isAuthenticated) {
+      fetchSubscription();
+    }
+  }, [fetchSubscription, isAuthenticated]);
 
   return {
+    subscription,
     loading,
     error,
     getPlans,
@@ -137,7 +176,9 @@ export const useSubscription = () => {
     verifyPayment,
     getUserSubscription,
     cancelSubscription,
-    trackUsage
+    trackUsage,
+    fetchSubscription,
+    isProUser: user?.role === 'pro' || user?.role === 'admin'
   };
 };
 

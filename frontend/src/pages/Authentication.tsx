@@ -27,37 +27,33 @@ const Authentication = () => {
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   
   const handleGoogleSuccess = async (credentialResponse: CredentialResponse) => {
-    if (credentialResponse.credential) {
-      setIsSubmitting(true);
-      setError('');
+    if (!credentialResponse.credential) {
+      setError('No credentials received from Google');
+      return;
+    }
+  
+    setIsSubmitting(true);
+    setError('');
+    
+    try {
+      const decoded = jwtDecode<DecodedGoogleToken>(credentialResponse.credential);
       
-      try {
-        const decoded = jwtDecode<User>(credentialResponse.credential);
-    
-        const response = await axios.post(`${API_BASE_URL}/auth/oauth/login`, {
-          provider: 'google',
-          providerId: decoded.sub,
-          email: decoded.email,
-          firstName: decoded.given_name,
-          lastName: decoded.family_name,
-          photo: decoded.picture,
-          accessToken: credentialResponse.credential
-        });
-    
-        const { token, user } = response.data;
-        login(user);
-        localStorage.setItem("token", token);
-        navigate('/dashboard');
-      } catch (error: unknown) {
-        if (axios.isAxiosError(error) && error.response) {
-          setError(error.response.data?.message || 'Invalid email or password');
-        } else {
-          setError('An unexpected error occurred');
-        }
-        console.error('Google login failed:', error);
-      } finally {
-        setIsSubmitting(false);
-      }
+      // Call the login function with Google data
+      await login({
+        provider: 'google',
+        accessToken: credentialResponse.credential,
+        email: decoded.email,
+        firstName: decoded.given_name,
+        lastName: decoded.family_name,
+        photo: decoded.picture,
+      });
+  
+      navigate('/dashboard');
+    } catch (error: any) {
+      console.error('Google login failed:', error);
+      setError(error.response?.data?.message || 'Failed to authenticate with Google');
+    } finally {
+      setIsSubmitting(false);
     }
   };
   
