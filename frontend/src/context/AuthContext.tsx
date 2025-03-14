@@ -1,5 +1,6 @@
-import React, { createContext, useState, useContext, ReactNode } from 'react';
+import React, { createContext, useState, useContext, useEffect, ReactNode } from 'react';
 import { useNavigate } from 'react-router-dom';
+import api from '@/services/api';
 
 // Define user type
 type User = {
@@ -17,6 +18,8 @@ type AuthContextType = {
   login: (user: User) => void;
   logout: () => void;
   isAuthenticated: boolean;
+  loading: boolean;
+  refreshUser: () => Promise<void>; // Add this function
 };
 
 // Create context with default values
@@ -25,6 +28,8 @@ const AuthContext = createContext<AuthContextType>({
   login: () => {},
   logout: () => {},
   isAuthenticated: false,
+  loading: true,
+  refreshUser: async () => {}, // Add default implementation
 });
 
 // Custom hook to use auth context
@@ -34,9 +39,10 @@ export const useAuth = () => useContext(AuthContext);
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const navigate = useNavigate();
   const [user, setUser] = useState<User | null>(null);
+  const [loading, setLoading] = useState(true);
 
   // Check if user is already logged in (from localStorage or elsewhere)
-  React.useEffect(() => {
+  useEffect(() => {
     const token = localStorage.getItem('token');
     const storedUser = localStorage.getItem('user');
     
@@ -65,8 +71,20 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     navigate('/auth');
   };
 
+  // Function to refresh user data after subscription changes
+  const refreshUser = async () => {
+    try {
+      const response = await api.get('/users/me');
+      setUser(response.data.user);
+      return response.data.user;
+    } catch (error) {
+      console.error('Failed to refresh user:', error);
+      throw error;
+    }
+  };
+
   return (
-    <AuthContext.Provider value={{ user, login, logout, isAuthenticated: !!user }}>
+    <AuthContext.Provider value={{ user, login, logout, isAuthenticated: !!user, loading, refreshUser }}>
       {children}
     </AuthContext.Provider>
   );

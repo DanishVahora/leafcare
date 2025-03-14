@@ -9,6 +9,12 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Input } from "@/components/ui/input";
+import { useSubscription } from "@/hooks/useSubscription";
+import { loadRazorpayScript } from "@/lib/razorpay";
+import { toast } from "sonner";
+import { useAuth } from "@/context/AuthContext";
+import { useNavigate } from "react-router-dom";
+import { PaymentVerificationData } from "@/types/subscription";
 
 declare global {
   interface Window {
@@ -36,6 +42,11 @@ const SubscribePro: React.FC = () => {
   const [discountApplied, setDiscountApplied] = useState(false);
   const [paymentError, setPaymentError] = useState<string | null>(null);
   const [scrollProgress, setScrollProgress] = useState(0);
+  
+  // Add subscription hook and auth context
+  const { createOrder, verifyPayment } = useSubscription();
+  const { user, refreshUser } = useAuth();
+  const navigate = useNavigate();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -48,68 +59,106 @@ const SubscribePro: React.FC = () => {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  const loadRazorpayScript = () => {
-    return new Promise<boolean>((resolve, reject) => {
-      const script = document.createElement('script');
-      script.src = "https://checkout.razorpay.com/v1/checkout.js";
-      script.onload = () => resolve(true);
-      script.onerror = () => reject(new Error("Razorpay SDK failed to load."));
-      document.body.appendChild(script);
-    });
-  };
-
   const handlePayment = async () => {
     if (!email) {
+      toast({
+        title: "Email Required",
+        description: "Please enter your email to continue",
+        variant: "destructive"
+      });
       return;
     }
 
     setIsLoading(true);
-
-    let amount = paymentPeriod === "monthly" ? 999 : 9990;
-
-    if (discountApplied) {
-      amount = Math.floor(amount * 0.85);
-    }
-
-    const paymentData = {
-      key: import.meta.env.VITE_RAZORPAY_API_KEY,
-      amount: amount * 100,
-      currency: "INR",
-      name: "Plant Disease Detection Pro",
-      description: paymentPeriod === "monthly" ? "Monthly Subscription" : "Annual Subscription",
-      image: "/logo.png",
-      handler: function (response: unknown) {
-        setIsLoading(false);
-        console.log("Payment success:", response);
-      },
-      prefill: {
-        name: "",
-        email: email,
-        contact: ""
-      },
-      theme: {
-        color: "#22c55e"
-      },
-      modal: {
-        ondismiss: function () {
-          setIsLoading(false);
-        }
-      }
-    };
+    setPaymentError(null);
 
     try {
+      // 1. Load Razorpay SDK
       await loadRazorpayScript();
 
       if (!window.Razorpay) {
         throw new Error("Razorpay SDK not available");
       }
 
-      const razorpay = new window.Razorpay(paymentData);
-      razorpay.open();
+      // 2. Create order on backend
+      const plan = paymentPeriod;
+      const orderData = await createOrder(plan, discountApplied ? couponCode : undefined);
+      
+      console.log("Order created:", orderData);
+      
+      // 3. Setup Razorpay payment options
+      const options = {
+        key: import.meta.env.VITE_RAZORPAY_KEY_ID,
+        amount: orderData.amount * 100, // Amount in paise
+        currency: orderData.currency,
+        name: "LeafCare Pro",
+        description: `${paymentPeriod === "monthly" ? "Monthly" : "Annual"} Subscription`,
+        order_id: orderData.orderId,
+        handler: async function(response: any) {
+          console.log("Payment successful:", response);
+          
+          try {
+            // 4. Verify payment with backend
+            const verificationData: PaymentVerificationData = {
+              razorpay_payment_id: response.razorpay_payment_id,
+              razorpay_order_id: response.razorpay_order_id,
+              razorpay_signature: response.razorpay_signature,
+              plan,
+              couponCode: discountApplied ? couponCode : undefined
+            };
+            
+            // Send verification data to backend
+            const result = await verifyPayment(verificationData);
+            console.log("Payment verified:", result);
+            
+            // 5. Update user status and show success
+            await refreshUser();
+            
+            toast({
+              title: "Success!",
+              description: "Your subscription has been activated successfully",
+            });
+            
+            // Redirect to dashboard or subscription success page
+            navigate("/dashboard");
+          } catch (verifyError) {
+            console.error("Verification failed:", verifyError);
+            setPaymentError("Payment was processed but verification failed. Please contact support.");
+            toast({
+              title: "Verification Failed",
+              description: "Your payment was processed but we couldn't verify it. Please contact support.",
+              variant: "destructive"
+            });
+          }
+        },
+        prefill: {
+          name: user?.firstName || "",
+          email: email,
+          contact: user?.phone || ""
+        },
+        theme: {
+          color: "#22c55e"
+        },
+        modal: {
+          ondismiss: function() {
+            setIsLoading(false);
+            console.log("Payment dismissed");
+          }
+        }
+      };
+      
+      // 6. Open Razorpay checkout
+      const razorpayInstance = new window.Razorpay(options);
+      razorpayInstance.open();
     } catch (error) {
-      console.error("Razorpay error:", error);
+      console.error("Payment initialization error:", error);
+      setPaymentError("Payment initialization failed. Please try again.");
+      toast({
+        title: "Payment Failed",
+        description: "There was an error starting the payment process. Please try again.",
+        variant: "destructive"
+      });
       setIsLoading(false);
-      setPaymentError("Payment failed. Please try again.");
     }
   };
 

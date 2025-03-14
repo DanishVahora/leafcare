@@ -1,0 +1,271 @@
+{
+  "info": {
+    "name": "LeafCare API Testing",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "1. User Registration",
+      "request": {
+        "method": "POST",
+        "url": "{{baseUrl}}/api/auth/signup",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"firstName\": \"Test\",\n  \"lastName\": \"User\",\n  \"email\": \"test@example.com\",\n  \"password\": \"Password123!\"\n}"
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "2. User Login",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "const response = pm.response.json();",
+              "if (response.token) {",
+              "    pm.environment.set('token', response.token);",
+              "    console.log('Token saved to environment');",
+              "} else {",
+              "    console.error('No token found in response');",
+              "}",
+              "",
+              "pm.test(\"Token received and stored\", function () {",
+              "    pm.expect(pm.environment.get('token')).to.not.be.empty;",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "url": "{{baseUrl}}/api/auth/login",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"email\": \"test@example.com\",\n  \"password\": \"Password123!\"\n}"
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "3. Get Subscription Plans",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Authorization header is present\", function() {",
+              "    const request = pm.request;",
+              "    const authHeader = request.headers.get('Authorization');",
+              "    pm.expect(authHeader).to.include('Bearer');",
+              "    pm.expect(authHeader).to.not.include('{{token}}');",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "url": "{{baseUrl}}/api/subscriptions/plans",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{token}}"
+          }
+        ]
+      },
+      "response": []
+    },
+    {
+      "name": "4. Create Subscription Order (Monthly)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "const response = pm.response.json();",
+              "if (response.orderId) {",
+              "    pm.environment.set('orderId', response.orderId);",
+              "    pm.environment.set('amount', response.amount);",
+              "    pm.environment.set('currency', response.currency);",
+              "    pm.environment.set('receipt', response.receipt);",
+              "}",
+              "",
+              "pm.test(\"Authorization header is properly set\", function() {",
+              "    const request = pm.request;",
+              "    const authHeader = request.headers.get('Authorization');",
+              "    pm.expect(authHeader).to.include('Bearer');",
+              "    pm.expect(authHeader).to.not.include('{{token}}');",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        },
+        {
+          "listen": "prerequest",
+          "script": {
+            "exec": [
+              "// Verify token exists before making request",
+              "const token = pm.environment.get('token');",
+              "if (!token) {",
+              "    console.error('No token found in environment. Please run the login request first.');",
+              "}"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "url": "{{baseUrl}}/api/subscriptions/create-order",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "Authorization",
+            "value": "Bearer {{token}}"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"plan\": \"monthly\",\n  \"couponCode\": \"PLANT15\"\n}"
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "5. Verify Subscription Payment",
+      "request": {
+        "method": "POST",
+        "url": "{{baseUrl}}/api/subscriptions/verify-payment",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "Authorization",
+            "value": "Bearer {{token}}"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"razorpay_payment_id\": \"pay_test_123456\",\n  \"razorpay_order_id\": \"{{orderId}}\",\n  \"razorpay_signature\": \"generated_signature\",\n  \"plan\": \"monthly\",\n  \"couponCode\": \"PLANT15\"\n}"
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "6. Get User Subscription",
+      "request": {
+        "method": "GET",
+        "url": "{{baseUrl}}/api/subscriptions/my-subscription",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{token}}"
+          }
+        ]
+      },
+      "response": []
+    },
+    {
+      "name": "7. Track Feature Usage",
+      "request": {
+        "method": "POST",
+        "url": "{{baseUrl}}/api/subscriptions/track-usage",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "Authorization",
+            "value": "Bearer {{token}}"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"feature\": \"scan\"\n}"
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "8. Cancel Subscription",
+      "request": {
+        "method": "POST",
+        "url": "{{baseUrl}}/api/subscriptions/cancel",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{token}}"
+          }
+        ]
+      },
+      "response": []
+    },
+    {
+      "name": "9. Get All Subscriptions (Admin)",
+      "request": {
+        "method": "GET",
+        "url": "{{baseUrl}}/api/subscriptions/admin/all",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{token}}"
+          }
+        ]
+      },
+      "response": []
+    }
+  ],
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "// Global prerequest script",
+          "const baseUrl = pm.environment.get('baseUrl');",
+          "if (!baseUrl) {",
+          "    console.warn('baseUrl environment variable is not set! Please select an environment.');",
+          "}"
+        ]
+      }
+    },
+    {
+      "listen": "test",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "// Global test script",
+          "if (pm.response.code === 401) {",
+          "    console.error('Authentication error: Token may be invalid or expired');",
+          "    pm.test('Authentication error occurred', function() {",
+          "        const responseJson = pm.response.json();",
+          "        pm.expect(responseJson).to.have.property('message');",
+          "    });",
+          "}"
+        ]
+      }
+    }
+  ]
+}
