@@ -5,42 +5,61 @@ const { generateToken } = require('../utils/tokenUtils');
 
 exports.oauthLogin = async (req, res) => {
     try {
-        let { provider, providerId, email, firstName, lastName, photo } = req.body;
+        const { provider, email, firstName, lastName, photo, accessToken } = req.body;
 
-        // If lastName is missing, reconstruct it from firstName
-        let processedLastName = lastName;
-        if (!lastName && firstName.includes(" ")) {
-            const nameParts = firstName.split(" ");
-            firstName = nameParts[0]; // First word as first name
-            processedLastName = nameParts.slice(1).join(" "); // Remaining words as last name
-        }
-
-        // Check if user already exists
+        // Find or create user
         let user = await User.findOne({ email });
 
         if (!user) {
-            // If user does not exist, create a new one
+            // Create new user
             user = new User({
-                provider,
-                providerId,
                 email,
                 firstName,
-                lastName: processedLastName,
-                photo
+                lastName,
+                photo,
+                role: 'user',
+                authProviders: [{
+                    provider,
+                    accessToken
+                }]
             });
             await user.save();
         } else {
-            // Update user details (optional)
-            user.firstName = firstName;
-            user.lastName = processedLastName;
-            user.photo = photo;
+            // Update existing user's OAuth info
+            const providerExists = user.authProviders?.find(p => p.provider === provider);
+            if (providerExists) {
+                providerExists.accessToken = accessToken;
+            } else {
+                user.authProviders = user.authProviders || [];
+                user.authProviders.push({
+                    provider,
+                    accessToken
+                });
+            }
             await user.save();
         }
 
-        res.status(200).json({ message: "Login successful", user });
+        // Generate JWT token
+        const token = generateToken(user._id);
+
+        // Return user data and token
+        res.status(200).json({
+            token,
+            user: {
+                id: user._id,
+                email: user.email,
+                firstName: user.firstName,
+                lastName: user.lastName,
+                photo: user.photo,
+                role: user.role
+            }
+        });
 
     } catch (error) {
         console.error("OAuth Login Error:", error);
-        res.status(500).json({ message: "Error during OAuth login", error: error.message });
+        res.status(500).json({ 
+            message: "Error during OAuth login", 
+            error: error.message 
+        });
     }
 };

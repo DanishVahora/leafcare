@@ -1,73 +1,137 @@
-import React, { createContext, useState, useContext, ReactNode } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { createContext, useState, useContext, useEffect, useCallback } from 'react';
+import api from '@/services/api';
+import { User } from '@/types/user';
 
-// Define user type
-type User = {
-  id: string;
-  email: string;
-  firstName: string;
-  lastName: string;
-  photo?: string;
-  // Add other user fields as needed
-};
-
-// Define context type
-type AuthContextType = {
+interface AuthContextType {
   user: User | null;
-  login: (user: User) => void;
-  logout: () => void;
   isAuthenticated: boolean;
-};
+  isLoading: boolean;
+  login: (email: string, password: string) => Promise<User>;
+  signup: (userData: any) => Promise<User>;
+  logout: () => void;
+  refreshUserData: () => Promise<void>;
+}
 
-// Create context with default values
-const AuthContext = createContext<AuthContextType>({
-  user: null,
-  login: () => {},
-  logout: () => {},
-  isAuthenticated: false,
-});
+const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-// Custom hook to use auth context
-export const useAuth = () => useContext(AuthContext);
-
-// Auth provider component
-export const AuthProvider = ({ children }: { children: ReactNode }) => {
-  const navigate = useNavigate();
+export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
 
-  // Check if user is already logged in (from localStorage or elsewhere)
-  React.useEffect(() => {
+  // Load user data from token
+  const loadUser = useCallback(async () => {
     const token = localStorage.getItem('token');
-    const storedUser = localStorage.getItem('user');
     
-    if (token && storedUser) {
-      try {
-        setUser(JSON.parse(storedUser));
-      } catch (error) {
-        console.error('Failed to parse stored user data');
-        localStorage.removeItem('user');
-        localStorage.removeItem('token');
-        console.error(error);
-      }
+    if (!token) {
+      setIsLoading(false);
+      return;
+    }
+    
+    api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+    
+    try {
+      const response = await api.get('/users/me');
+      setUser(response.data.user);
+      setIsAuthenticated(true);
+    } catch (error) {
+      console.error('Error loading user', error);
+      localStorage.removeItem('token');
+      delete api.defaults.headers.common['Authorization'];
+    } finally {
+      setIsLoading(false);
     }
   }, []);
 
-  const login = (userData: User) => {
-    setUser(userData);
-    // Store user data for persistence
-    localStorage.setItem('user', JSON.stringify(userData));
+  // Load user on mount
+  useEffect(() => {
+    loadUser();
+  }, [loadUser]);
+
+  // Login function
+  const login = async (userData: any) => {
+    try {
+      let response;
+      
+      if (userData.accessToken) {
+        // Handle Google OAuth login
+        response = await api.post('/auth/oauth/login', userData);
+      } else {
+        // Handle email/password login
+        response = await api.post('/auth/login', userData);
+      }
+      
+      if (response.data?.token) {
+        localStorage.setItem('token', response.data.token);
+        api.defaults.headers.common['Authorization'] = `Bearer ${response.data.token}`;
+        setUser(response.data.user);
+        setIsAuthenticated(true);
+        return response.data.user;
+      } else {
+        throw new Error('No token received');
+      }
+    } catch (error) {
+      console.error('Login error:', error);
+      localStorage.removeItem('token');
+      delete api.defaults.headers.common['Authorization'];
+      setUser(null);
+      setIsAuthenticated(false);
+      throw error;
+    }
   };
 
+  // Signup function
+  const signup = async (userData: any) => {
+    const response = await api.post('/auth/register', userData);
+    const { token, user } = response.data;
+    
+    localStorage.setItem('token', token);
+    api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+    
+    setUser(user);
+    setIsAuthenticated(true);
+    return user;
+  };
+
+  // Logout function
   const logout = () => {
-    setUser(null);
     localStorage.removeItem('token');
-    localStorage.removeItem('user');
-    navigate('/auth');
+    delete api.defaults.headers.common['Authorization'];
+    setUser(null);
+    setIsAuthenticated(false);
+  };
+
+  // Refresh user data function (called after actions that might change user data)
+  const refreshUserData = async () => {
+    if (!isAuthenticated) return;
+    
+    try {
+      const response = await api.get('/users/me');
+      setUser(response.data.user);
+    } catch (error) {
+      console.error('Error refreshing user data', error);
+    }
   };
 
   return (
-    <AuthContext.Provider value={{ user, login, logout, isAuthenticated: !!user }}>
+    <AuthContext.Provider value={{
+      user,
+      isAuthenticated,
+      isLoading,
+      login,
+      signup,
+      logout,
+      refreshUserData
+    }}>
       {children}
     </AuthContext.Provider>
   );
+};
+
+export const useAuth = () => {
+  const context = useContext(AuthContext);
+  if (context === undefined) {
+    throw new Error('useAuth must be used within an AuthProvider');
+  }
+  return context;
 };

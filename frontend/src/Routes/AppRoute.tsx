@@ -9,6 +9,7 @@ import PlantAnalyze from '../pages/PlantAnalyzer';
 import DetectionPage from '@/pages/DetectionPage';
 import SubscribePro from '@/pages/SubscribePro';
 import {DocumentPage} from '@/pages/DocumentPage';
+import { SubscriptionManager } from '@/components/SubscriptionManager';
 import HistoryPage from '@/pages/HistoryPage';
 
 export const AppRoute = () => {
@@ -61,7 +62,7 @@ export const AppRoute = () => {
         <DocumentPage/>
         // </ProtectedRoute>
       } />
-
+      <Route path="/subscribe" element={<SubscriptionManager />} />
       {/* Not found */}
       <Route path="*" element={<h1>Not Found</h1>} />
 

@@ -1,11 +1,11 @@
-import React, { useState, useCallback, useRef } from "react";
+import React, { useState, useCallback, useRef, useEffect } from "react";
 import { Layout } from "../Layout/Layout";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { 
   Upload, 
-  Link, 
+  Link as LinkIcon, 
   Image, 
   TestTube2, 
   AlertCircle, 
@@ -15,10 +15,16 @@ import {
   Shield, 
   ShoppingBag, 
   BookOpen,
-  Sprout // Add this import
+  Sprout,
+  Sparkles
 } from "lucide-react";
 import { motion } from "framer-motion";
 import { useDropzone } from "react-dropzone";
+import { useFeatureAccess } from "@/hooks/useFeatureAccess";
+import { useAuth } from "@/context/AuthContext";
+import { UpgradePrompt } from "@/components/UpgradePrompt";
+import { useSubscription } from "@/hooks/useSubscription";
+import { toast } from "sonner";
 
 const fadeInUp = {
   hidden: { opacity: 0, y: 20 },
@@ -37,6 +43,38 @@ const DetectionPage: React.FC = () => {
   const [treatmentError, setTreatmentError] = useState<string | null>(null);
   const [isReading, setIsReading] = useState(false);
   const speechSynthRef = useRef<SpeechSynthesisUtterance | null>(null);
+  // Add this state to track when a scan is in progress
+  const [scanInProgress, setScanInProgress] = useState(false);
+ 
+  // Access management
+  const { isAuthenticated, user } = useAuth();
+  const { checkFeatureAccess, canAccessFeature, usageCount, setUsageCount } = useFeatureAccess();
+  const [accessGranted, setAccessGranted] = useState(true);
+  const { trackUsage } = useSubscription();
+  const [userScansRemaining, setUserScansRemaining] = useState<number | null>(null);
+
+  // Check initial access based on user state
+  useEffect(() => {
+    setAccessGranted(canAccessFeature('scan'));
+  }, [canAccessFeature, isAuthenticated, user]);
+
+  // Fetch remaining scan count for authenticated users
+  useEffect(() => {
+    const fetchUserScanData = async () => {
+      if (isAuthenticated && user) {
+        try {
+          // For authenticated users, calculate remaining scans
+          const scanThisMonth = user.usageStats?.scanThisMonth || 0;
+          const remaining = user.role === 'pro' ? Infinity : 5 - scanThisMonth;
+          setUserScansRemaining(remaining);
+        } catch (error) {
+          console.error("Error fetching scan data", error);
+        }
+      }
+    };
+    
+    fetchUserScanData();
+  }, [isAuthenticated, user]);
 
   const preprocessImage = useCallback((img: HTMLImageElement) => {
     const canvas = document.createElement('canvas');
@@ -57,7 +95,106 @@ const DetectionPage: React.FC = () => {
     return Array.from(processedArray);
   }, []);
 
-  const onDrop = useCallback((acceptedFiles: File[]) => {
+  // Add a function to check if a new scan is allowed
+  const canPerformNewScan = useCallback(() => {
+    // If a scan is already in progress or completed in this session, don't allow new scans for guests
+    if (!isAuthenticated && (scanInProgress || usageCount >= 1)) {
+      setAccessGranted(false);
+      return false;
+    }
+    
+    // For authenticated users, check their monthly limits using the real-time data
+    if (isAuthenticated && user?.role !== 'pro') {
+      if (userScansRemaining !== null && userScansRemaining <= 0) {
+        setAccessGranted(false);
+        return false;
+      }
+    }
+    
+    return true;
+  }, [isAuthenticated, scanInProgress, usageCount, user, userScansRemaining]);
+
+  // Update the handleDetection function
+  const handleDetection = async () => {
+    // Set the scan in progress flag to true
+    setScanInProgress(true);
+    
+    setLoading(true);
+    setError(null);
+    setTreatmentInfo(null);
+    
+    try {
+      const formData = new FormData();
+      const blob = await fetch(imageSrc!).then(r => r.blob());
+      formData.append('file', blob, 'image.jpg');
+
+      const response = await fetch(
+        "https://plant-diesase.kindmushroom-20b564e6.centralindia.azurecontainerapps.io/predict/",
+        { method: 'POST', body: formData }
+      );
+
+      if (!response.ok) {
+        throw new Error('Failed to get prediction');
+      }
+
+      const data = await response.json();
+      
+      if (data && data.prediction) {
+        setResults(data);
+        await fetchTreatmentInfo(data.prediction.replace(/_/g, ' '));
+        
+        // Record usage based on authentication status
+        if (isAuthenticated) {
+          // For authenticated users, track via API
+          try {
+            await trackUsage('scan');
+            // Update local state to reflect the new scan count
+            if (userScansRemaining !== null && userScansRemaining !== Infinity) {
+              setUserScansRemaining(userScansRemaining - 1);
+            }
+          } catch (error) {
+            console.error("Failed to track scan usage", error);
+            toast.error("Failed to update scan count. Your usage may not be properly tracked.");
+          }
+        } else {
+          // For guests, track locally (existing code)
+          const newCount = usageCount + 1;
+          localStorage.setItem('guestPredictionCount', newCount.toString());
+          if (typeof setUsageCount === 'function') {
+            setUsageCount(newCount);
+          }
+        }
+      } else {
+        throw new Error('Invalid prediction response');
+      }
+    } catch (err) {
+      setError(typeof err === 'string' ? err : "Error processing image. Please try again.");
+      // If there's an error, we'll set scanInProgress back to false
+      setScanInProgress(false);
+    } finally {
+      setLoading(false);
+      // We don't reset scanInProgress here because we want to keep tracking
+      // that a scan has been performed
+    }
+  };
+
+  // Add a reset function that can be called if needed
+  const resetScan = () => {
+    setImageSrc(null);
+    setPreprocessedImage(null);
+    setResults(null);
+    setTreatmentInfo(null);
+    setError(null);
+    setScanInProgress(false);
+  };
+
+  // Modify onDrop to use the new access check
+  const onDrop = useCallback(async (acceptedFiles: File[]) => {
+    // Check if user can perform a new scan
+    if (!canPerformNewScan()) {
+      return;
+    }
+    
     const file = acceptedFiles[0];
     const reader = new FileReader();
     reader.onload = (e) => {
@@ -69,7 +206,37 @@ const DetectionPage: React.FC = () => {
       };
     };
     reader.readAsDataURL(file);
-  }, [preprocessImage]);
+  }, [preprocessImage, canPerformNewScan]);
+
+  // Update handleUrlSubmit to use the new access check
+  const handleUrlSubmit = async () => {
+    if (!url.trim()) {
+      setError("Please enter a valid URL");
+      return;
+    }
+
+    // Check access before proceeding
+    if (!canPerformNewScan()) {
+      return;
+    }
+
+    try {
+      const img = new window.Image();
+      img.crossOrigin = "anonymous";
+      img.src = url;
+      
+      img.onload = () => {
+        setImageSrc(url);
+        preprocessImage(img);
+      };
+
+      img.onerror = () => {
+        setError("Failed to load image from URL");
+      };
+    } catch (err) {
+      setError("Invalid image URL");
+    }
+  };
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,
@@ -77,20 +244,6 @@ const DetectionPage: React.FC = () => {
       'image/*': ['.jpeg', '.jpg', '.png']
     }
   });
-
-  const handleUrlSubmit = async () => {
-    try {
-      const img = new window.Image();
-      img.crossOrigin = "anonymous";
-      img.src = url;
-      img.onload = () => {
-        setImageSrc(url);
-        preprocessImage(img);
-      };
-    } catch (err) {
-      setError("Invalid image URL");
-    }
-  };
 
   // Enhanced parse function for better structure
   const parseGeminiResponse = (text: string) => {
@@ -216,34 +369,6 @@ Use straightforward language appropriate for farmers with basic education. Prior
     }
   };
 
-  const handleDetection = async () => {
-    setLoading(true);
-    setError(null);
-    setTreatmentInfo(null);
-    
-    try {
-      const formData = new FormData();
-      const blob = await fetch(imageSrc!).then(r => r.blob());
-      formData.append('file', blob, 'image.jpg');
-
-      const response = await fetch(
-        "https://plant-diesase.kindmushroom-20b564e6.centralindia.azurecontainerapps.io/predict/",
-        { method: 'POST', body: formData }
-      );
-
-      const data = await response.json();
-      setResults(data);
-      
-      if (data.prediction) {
-        await fetchTreatmentInfo(data.prediction.replace(/_/g, ' '));
-      }
-    } catch (err) {
-      setError("Error processing image. Please try again.");
-    } finally {
-      setLoading(false);
-    }
-  };
-
   const handleReadAloud = () => {
     if (!treatmentInfo || !treatmentInfo.originalText) return;
     
@@ -335,6 +460,30 @@ Use straightforward language appropriate for farmers with basic education. Prior
       }
     };
   }, []);
+
+  // Optional: Add a "Scan Another" button after results are displayed
+  // This button would only be visible for users who have access
+  const renderScanAnotherButton = () => {
+    if (!results) return null;
+    
+    const hasAccess = isAuthenticated ? 
+      (user?.role === 'pro' || (user?.usageStats?.scanThisMonth || 0) < 5) : 
+      usageCount < 1;
+    
+    if (!hasAccess) return null;
+    
+    return (
+      <div className="text-center mt-8">
+        <Button
+          onClick={resetScan}
+          className="gap-2 bg-green-600 hover:bg-green-700"
+        >
+          <TestTube2 className="w-4 h-4" />
+          Scan Another Plant
+        </Button>
+      </div>
+    );
+  };
 
   // Function to render treatment info with enhanced UI
   const renderTreatmentInfo = () => {
@@ -468,182 +617,239 @@ Use straightforward language appropriate for farmers with basic education. Prior
           <h1 className="text-4xl font-bold text-green-800 mb-8 flex items-center gap-3">
             <TestTube2 className="w-8 h-8" />
             Plant Disease Detection
+            {user?.role === 'pro' && (
+              <Badge variant="outline" className="ml-2 bg-amber-100 text-amber-700 border-amber-200 flex items-center gap-1">
+                <Sparkles className="h-4 w-4" /> Pro
+              </Badge>
+            )}
           </h1>
 
-          <div className="grid md:grid-cols-2 gap-6 mb-12">
-            <Card className="p-6 shadow-lg hover:shadow-xl transition-shadow">
-              <div className="flex flex-col gap-4">
-                <div className="flex items-center gap-2 text-green-700 mb-4">
-                  <Link className="w-5 h-5" />
-                  <h3 className="text-xl font-semibold">Image URL</h3>
+          {/* Usage indicator for non-pro users */}
+          {!isAuthenticated && (
+            <div className="mb-6 p-4 rounded-lg bg-gray-50 border border-gray-200">
+              <p className="text-gray-600 flex items-center justify-between">
+                <span>Guest Mode: {usageCount}/1 scan used</span>
+                {usageCount > 0 && (
+                  <Button 
+                    variant="link" 
+                    className="text-green-600" 
+                    onClick={() => window.location.href = '/signup'}
+                  >
+                    Sign Up for More
+                  </Button>
+                )}
+              </p>
+            </div>
+          )}
+          
+          {isAuthenticated && user?.role !== 'pro' && (
+            <div className="mb-6 p-4 rounded-lg bg-gray-50 border border-gray-200">
+              <div className="flex justify-between items-center">
+                <div>
+                  <p className="text-gray-700">
+                    Free Account: {userScansRemaining !== null ? `${5 - userScansRemaining}/5` : "Loading..."} monthly scans used
+                  </p>
+                  <p className="text-sm text-gray-500">Upgrade to Pro for unlimited scans</p>
                 </div>
-                <input
-                  type="text"
-                  value={url}
-                  onChange={(e) => setUrl(e.target.value)}
-                  placeholder="Paste image URL here"
-                  className="p-3 border rounded-lg focus:ring-2 focus:ring-green-500 focus:outline-none"
-                />
-                <Button onClick={handleUrlSubmit} className="gap-2 bg-green-600 hover:bg-green-700">
-                  Load URL
-                  <Image className="w-4 h-4" />
+                <Button 
+                  variant="default" 
+                  onClick={() => window.location.href = '/SubToPro'}
+                  className="bg-green-600 hover:bg-green-700"
+                >
+                  Upgrade
                 </Button>
               </div>
-            </Card>
-
-            <Card className="p-6 shadow-lg hover:shadow-xl transition-shadow">
-              <div
-                {...getRootProps()}
-                className={`border-2 border-dashed rounded-lg p-8 text-center cursor-pointer transition-colors
-                  ${isDragActive ? 'border-green-500 bg-green-50' : 'border-gray-300 hover:border-green-400'}`}
-              >
-                <input {...getInputProps()} />
-                <div className="flex flex-col items-center gap-4">
-                  <Upload className="w-8 h-8 text-green-600" />
-                  <p className="text-gray-600">
-                    {isDragActive ? "Drop image here" : "Drag & drop or click to upload"}
-                  </p>
-                  <Badge variant="outline">Supports JPG, PNG</Badge>
-                </div>
-              </div>
-            </Card>
-          </div>
-
-          {imageSrc && (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              className="grid md:grid-cols-2 gap-6 mb-8"
-            >
-              <Card className="p-4 shadow-lg">
-                <h3 className="text-lg font-semibold mb-4 text-green-700">Original Image</h3>
-                <img
-                  src={imageSrc}
-                  alt="Uploaded plant"
-                  className="rounded-lg max-h-64 object-contain mx-auto"
-                />
-              </Card>
-              
-              <Card className="p-4 shadow-lg">
-                <h3 className="text-lg font-semibold mb-4 text-green-700">Preprocessed Image</h3>
-                {preprocessedImage && (
-                  <img
-                    src={preprocessedImage}
-                    alt="Preprocessed"
-                    className="rounded-lg max-h-64 object-contain mx-auto"
-                  />
-                )}
-              </Card>
-            </motion.div>
+            </div>
           )}
 
-          {imageSrc && (
-            <div className="text-center mb-12">
-              <Button
-                onClick={handleDetection}
-                disabled={loading}
-                size="lg"
-                className="gap-2 px-8 py-4 text-lg bg-green-600 hover:bg-green-700"
+          {/* Access denied message */}
+          {!accessGranted && (
+            <div className="mb-8">
+              <UpgradePrompt feature="scan" />
+            </div>
+          )}
+
+          {accessGranted && (
+            <>
+              <div className="grid md:grid-cols-2 gap-6 mb-12">
+                <Card className="p-6 shadow-lg hover:shadow-xl transition-shadow">
+                  <div className="flex flex-col gap-4">
+                    <div className="flex items-center gap-2 text-green-700 mb-4">
+                      <LinkIcon className="w-5 h-5" />
+                      <h3 className="text-xl font-semibold">Image URL</h3>
+                    </div>
+                    <input
+                      type="text"
+                      value={url}
+                      onChange={(e) => setUrl(e.target.value)}
+                      placeholder="Paste image URL here"
+                      className="p-3 border rounded-lg focus:ring-2 focus:ring-green-500 focus:outline-none"
+                    />
+                    <Button onClick={handleUrlSubmit} className="gap-2 bg-green-600 hover:bg-green-700">
+                      Load URL
+                      <Image className="w-4 h-4" />
+                    </Button>
+                  </div>
+                </Card>
+
+                <Card className="p-6 shadow-lg hover:shadow-xl transition-shadow">
+                  <div
+                    {...getRootProps()}
+                    className={`border-2 border-dashed rounded-lg p-8 text-center cursor-pointer transition-colors
+                      ${isDragActive ? 'border-green-500 bg-green-50' : 'border-gray-300 hover:border-green-400'}`}
+                  >
+                    <input {...getInputProps()} />
+                    <div className="flex flex-col items-center gap-4">
+                      <Upload className="w-8 h-8 text-green-600" />
+                      <p className="text-gray-600">
+                        {isDragActive ? "Drop image here" : "Drag & drop or click to upload"}
+                      </p>
+                      <Badge variant="outline">Supports JPG, PNG</Badge>
+                    </div>
+                  </div>
+                </Card>
+              </div>
+
+              {imageSrc && (
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  className="grid md:grid-cols-2 gap-6 mb-8"
+                >
+                  <Card className="p-4 shadow-lg">
+                    <h3 className="text-lg font-semibold mb-4 text-green-700">Original Image</h3>
+                    <img
+                      src={imageSrc}
+                      alt="Uploaded plant"
+                      className="rounded-lg max-h-64 object-contain mx-auto"
+                    />
+                  </Card>
+                  
+                  <Card className="p-4 shadow-lg">
+                    <h3 className="text-lg font-semibold mb-4 text-green-700">Preprocessed Image</h3>
+                    {preprocessedImage && (
+                      <img
+                        src={preprocessedImage}
+                        alt="Preprocessed"
+                        className="rounded-lg max-h-64 object-contain mx-auto"
+                      />
+                    )}
+                  </Card>
+                </motion.div>
+              )}
+
+              {imageSrc && (
+                <div className="text-center mb-12">
+                  <Button
+                    onClick={handleDetection}
+                    disabled={loading}
+                    size="lg"
+                    className="gap-2 px-8 py-4 text-lg bg-green-600 hover:bg-green-700"
+                  >
+                    {loading ? (
+                      <>
+                        <Loader2 className="w-5 h-5 animate-spin" />
+                        Analyzing...
+                      </>
+                    ) : (
+                      <>
+                        Detect Disease
+                        <TestTube2 className="w-5 h-5" />
+                      </>
+                    )}
+                  </Button>
+                </div>
+              )}
+            </>
+          )}
+
+
+{results && (
+  <Card className="p-6 shadow-lg mb-8">
+    <div className="space-y-6">
+      {results.error ? (
+        <div className="text-red-600 flex items-center gap-2">
+          <AlertCircle className="w-5 h-5" />
+          {results.error}
+        </div>
+      ) : (
+        <>
+          <div className="text-center">
+            <h2 className="text-2xl font-bold text-green-800 mb-2">
+              Detection Results
+            </h2>
+            <Badge variant="outline" className="text-lg py-1 px-3">
+              Confidence: {(results.confidence * 100).toFixed(1)}%
+            </Badge>
+          </div>
+
+          <div className="bg-green-50 rounded-xl p-6">
+            <h3 className="text-xl font-semibold mb-4 text-green-700">
+              {results.prediction.replace(/_/g, ' ')}
+            </h3>
+            
+            <div className="space-y-3">
+              <h4 className="font-semibold text-green-800">Top Predictions:</h4>
+              {results.top_3_predictions.map((pred: any, index: number) => (
+                <div 
+                  key={index} 
+                  className="flex justify-between items-center bg-white p-3 rounded-lg shadow-sm hover:shadow transition-shadow"
+                >
+                  <span className="text-gray-700">
+                    {pred.class.replace(/_/g, ' ')}
+                  </span>
+                  <Badge variant="secondary">
+                    {(pred.confidence * 100).toFixed(1)}%
+                  </Badge>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="mt-6">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-xl font-semibold text-green-700">Treatment Guide</h3>
+              <Button 
+                onClick={handleReadAloud} 
+                variant="outline" 
+                className={`gap-2 ${isReading ? 'bg-red-50' : 'bg-green-50'}`}
+                disabled={!treatmentInfo || loadingTreatment}
               >
-                {loading ? (
+                {isReading ? (
                   <>
-                    <Loader2 className="w-5 h-5 animate-spin" />
-                    Analyzing...
+                    <VolumeX className="w-4 h-4" />
+                    Stop Reading
                   </>
                 ) : (
                   <>
-                    Detect Disease
-                    <TestTube2 className="w-5 h-5" />
+                    <Volume2 className="w-4 h-4" />
+                    Read Aloud
                   </>
                 )}
               </Button>
             </div>
-          )}
-
-          {results && (
-            <Card className="p-6 shadow-lg mb-8">
-              <div className="space-y-6">
-                {results.error ? (
-                  <div className="text-red-600 flex items-center gap-2">
-                    <AlertCircle className="w-5 h-5" />
-                    {results.error}
-                  </div>
-                ) : (
-                  <>
-                    <div className="text-center">
-                      <h2 className="text-2xl font-bold text-green-800 mb-2">
-                        Detection Results
-                      </h2>
-                      <Badge variant="outline" className="text-lg py-1 px-3">
-                        Confidence: {(results.confidence * 100).toFixed(1)}%
-                      </Badge>
-                    </div>
-
-                    <div className="bg-green-50 rounded-xl p-6">
-                      <h3 className="text-xl font-semibold mb-4 text-green-700">
-                        {results.prediction.replace(/_/g, ' ')}
-                      </h3>
-                      
-                      <div className="space-y-3">
-                        <h4 className="font-semibold text-green-800">Top Predictions:</h4>
-                        {results.top_3_predictions.map((pred: any, index: number) => (
-                          <div key={index} className="flex justify-between items-center bg-white p-3 rounded-lg shadow-sm hover:shadow transition-shadow">
-                            <span className="text-gray-700">
-                              {pred.class.replace(/_/g, ' ')}
-                            </span>
-                            <Badge variant="secondary">
-                              {(pred.confidence * 100).toFixed(1)}%
-                            </Badge>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-
-                    <div className="mt-6">
-                      <div className="flex justify-between items-center mb-4">
-                        <h3 className="text-xl font-semibold text-green-700">Treatment Guide</h3>
-                        
-                        <Button 
-                          onClick={handleReadAloud} 
-                          variant="outline" 
-                          className={`gap-2 ${isReading ? 'bg-red-50' : 'bg-green-50'}`}
-                          disabled={!treatmentInfo || loadingTreatment}
-                        >
-                          {isReading ? (
-                            <>
-                              <VolumeX className="w-4 h-4" />
-                              Stop Reading
-                            </>
-                          ) : (
-                            <>
-                              <Volume2 className="w-4 h-4" />
-                              Read Aloud
-                            </>
-                          )}
-                        </Button>
-                      </div>
-                      
-                      {loadingTreatment && (
-                        <div className="flex items-center gap-2 text-green-700 p-6 bg-green-50 rounded-xl">
-                          <Loader2 className="w-4 h-4 animate-spin" />
-                          Loading treatment information...
-                        </div>
-                      )}
-
-                      {treatmentError && (
-                        <div className="text-red-600 flex items-center gap-2 p-6 bg-red-50 rounded-xl">
-                          <AlertCircle className="w-5 h-5" />
-                          {treatmentError}
-                        </div>
-                      )}
-
-                      {treatmentInfo && renderTreatmentInfo()}
-                    </div>
-                  </>
-                )}
+            
+            {loadingTreatment && (
+              <div className="flex items-center gap-2 text-green-700 p-6 bg-green-50 rounded-xl">
+                <Loader2 className="w-4 h-4 animate-spin" />
+                Loading treatment information...
               </div>
-            </Card>
-          )}
+            )}
+
+            {treatmentError && (
+              <div className="text-red-600 flex items-center gap-2 p-6 bg-red-50 rounded-xl">
+                <AlertCircle className="w-5 h-5" />
+                {treatmentError}
+              </div>
+            )}
+
+            {treatmentInfo && renderTreatmentInfo()}
+          </div>
+        </>
+      )}
+    </div>
+  </Card>
+)}
 
           {error && (
             <div className="text-red-600 flex items-center gap-2 mt-4 p-4 bg-red-50 rounded-lg">

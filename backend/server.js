@@ -5,8 +5,9 @@ const bodyParser = require('body-parser');
 const connectDB = require('./config/db');
 const authRoutes = require('./routes/authRoutes');
 const helmet = require("helmet");
-
-
+const subscriptionRoutes = require('./routes/subscriptionRoutes');
+const { setupScheduledTasks } = require('./utils/scheduledTasks');
+const userRoutes = require('./routes/userRoutes');
 
 // Load env vars
 
@@ -37,6 +38,11 @@ app.use(bodyParser.json());
 
 // Routes
 app.use('/api/auth', authRoutes);
+app.use('/api/subscriptions', subscriptionRoutes);
+app.use('/api/users', userRoutes); // Add this line
+
+// Set up scheduled tasks
+setupScheduledTasks();
 
 // Start Server
 const PORT = process.env.PORT || 5000;
