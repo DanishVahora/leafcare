@@ -5,9 +5,7 @@ import {
   Leaf,
   Camera,
   Clock,
-  Cpu,
   BookOpen,
-  Settings,
   LogOut,
   User,
   Menu,
@@ -24,8 +22,6 @@ const NAV_LINKS = [
   { name: 'Detection', path: '/detect', icon: Camera },
   { name: 'Docs', path: '/docs', icon: BookOpen },
   { name: 'History', path: '/history', icon: Clock },
-  { name: 'Subscription', path: '/SubToPro', icon: Cpu },
-  { name: 'Settings', path: '/settings', icon: Settings },
 ];
 
 export const Navbar: React.FC<NavbarProps> = ({ showFullMenu = true }) => {
@@ -45,6 +41,30 @@ export const Navbar: React.FC<NavbarProps> = ({ showFullMenu = true }) => {
     return () => window.removeEventListener('scroll', handleScroll);
   }, [lastScroll]);
 
+  useEffect(() => {
+    // Close mobile menu when resizing to desktop view
+    const handleResize = () => {
+      if (window.innerWidth >= 768 && isOpen) {
+        setIsOpen(false);
+      }
+    };
+
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, [isOpen]);
+
+  // Prevent scrolling when mobile menu is open
+  useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'auto';
+    }
+    return () => {
+      document.body.style.overflow = 'auto';
+    };
+  }, [isOpen]);
+
   return (
     <motion.nav
       className={cn(
@@ -63,9 +83,9 @@ export const Navbar: React.FC<NavbarProps> = ({ showFullMenu = true }) => {
             whileHover={{ scale: 1.05 }}
           >
             <div className="p-1.5 rounded-lg bg-gradient-to-tr from-green-600 to-emerald-600">
-              <Leaf className="h-6 w-6 text-white" />
+              <Leaf className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
             </div>
-            <span className="text-xl font-bold bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent">
+            <span className="text-lg sm:text-xl font-bold bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent">
               LeafCare
             </span>
           </motion.a>
@@ -73,18 +93,18 @@ export const Navbar: React.FC<NavbarProps> = ({ showFullMenu = true }) => {
           {showFullMenu && (
             <>
               {/* Desktop Navigation */}
-              <div className="hidden md:flex items-center space-x-6">
-                <div className="flex space-x-4">
+              <div className="hidden md:flex items-center space-x-3 lg:space-x-6">
+                <div className="flex space-x-1 lg:space-x-4">
                   {NAV_LINKS.map((link) => (
                     <motion.a
                       key={link.name}
                       href={link.path}
-                      className="relative px-3 py-2 text-gray-600 hover:text-green-700 group"
+                      className="relative px-2 lg:px-3 py-2 text-gray-600 hover:text-green-700 group"
                       whileHover={{ scale: 1.05 }}
                     >
-                      <div className="flex items-center space-x-2">
-                        <link.icon className="h-5 w-5" />
-                        <span>{link.name}</span>
+                      <div className="flex items-center space-x-1 lg:space-x-2">
+                        <link.icon className="h-4 w-4 lg:h-5 lg:w-5" />
+                        <span className="text-sm lg:text-base">{link.name}</span>
                       </div>
                       <div className="absolute bottom-0 left-0 h-0.5 bg-green-600 w-0 group-hover:w-full transition-all duration-300" />
                     </motion.a>
@@ -93,7 +113,7 @@ export const Navbar: React.FC<NavbarProps> = ({ showFullMenu = true }) => {
 
                 {/* User Section */}
                 {user ? (
-                  <div className="relative ml-4">
+                  <div className="relative ml-2 lg:ml-4">
                     <motion.button
                       onClick={() => setIsOpen(!isOpen)}
                       className="flex items-center space-x-2 group"
@@ -104,7 +124,7 @@ export const Navbar: React.FC<NavbarProps> = ({ showFullMenu = true }) => {
                         <img
                           src={user.photo || '/user-profile.svg'}
                           alt="Profile"
-                          className="h-9 w-9 rounded-full border-2 border-green-100 group-hover:border-transparent transition-all"
+                          className="h-8 w-8 lg:h-9 lg:w-9 rounded-full border-2 border-green-100 group-hover:border-transparent transition-all"
                         />
                       </div>
                     </motion.button>
@@ -144,10 +164,10 @@ export const Navbar: React.FC<NavbarProps> = ({ showFullMenu = true }) => {
                     </AnimatePresence>
                   </div>
                 ) : (
-                  <div className="flex gap-2 ml-4">
+                  <div className="flex gap-2 ml-2 lg:ml-4">
                     <motion.a
                       href="/auth"
-                      className="px-5 py-2.5 rounded-lg bg-transparent text-green-600 hover:bg-green-50 transition-colors border border-green-100"
+                      className="px-3 lg:px-5 py-2 lg:py-2.5 rounded-lg bg-transparent text-green-600 hover:bg-green-50 transition-colors border border-green-100 text-sm lg:text-base"
                       whileHover={{ scale: 1.05 }}
                       whileTap={{ scale: 0.95 }}
                     >
@@ -155,7 +175,7 @@ export const Navbar: React.FC<NavbarProps> = ({ showFullMenu = true }) => {
                     </motion.a>
                     <motion.a
                       href="/signup"
-                      className="px-5 py-2.5 rounded-lg bg-gradient-to-r from-green-600 to-emerald-600 text-white shadow-md hover:shadow-lg transition-all"
+                      className="px-3 lg:px-5 py-2 lg:py-2.5 rounded-lg bg-gradient-to-r from-green-600 to-emerald-600 text-white shadow-md hover:shadow-lg transition-all text-sm lg:text-base"
                       whileHover={{ scale: 1.05 }}
                       whileTap={{ scale: 0.95 }}
                     >
@@ -169,6 +189,7 @@ export const Navbar: React.FC<NavbarProps> = ({ showFullMenu = true }) => {
               <button
                 onClick={() => setIsOpen(!isOpen)}
                 className="md:hidden p-2 rounded-lg hover:bg-green-50 transition-colors"
+                aria-label="Toggle mobile menu"
               >
                 {isOpen ? (
                   <X className="h-6 w-6 text-green-600" />
@@ -188,7 +209,7 @@ export const Navbar: React.FC<NavbarProps> = ({ showFullMenu = true }) => {
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}
-            className="md:hidden absolute w-full bg-white/95 backdrop-blur-xl border-b border-green-100"
+            className="md:hidden fixed inset-0 top-16 bg-white/95 backdrop-blur-xl border-t border-green-100 overflow-y-auto z-50 pb-safe h-[calc(100vh-4rem)]"
           >
             <div className="px-4 py-6 space-y-4">
               {user && (
@@ -214,6 +235,7 @@ export const Navbar: React.FC<NavbarProps> = ({ showFullMenu = true }) => {
                   key={link.name}
                   href={link.path}
                   className="flex items-center space-x-3 px-3 py-3 text-gray-600 hover:bg-green-50 rounded-lg transition-colors"
+                  onClick={() => setIsOpen(false)}
                 >
                   <link.icon className="h-6 w-6 text-green-600" />
                   <span>{link.name}</span>
@@ -222,23 +244,28 @@ export const Navbar: React.FC<NavbarProps> = ({ showFullMenu = true }) => {
 
               {user ? (
                 <button
-                  onClick={logout}
+                  onClick={() => {
+                    setIsOpen(false);
+                    logout();
+                  }}
                   className="w-full flex items-center space-x-3 px-3 py-3 text-red-500 hover:bg-green-50 rounded-lg"
                 >
                   <LogOut className="h-6 w-6" />
                   <span>Sign Out</span>
                 </button>
               ) : (
-                <div className="space-y-3">
+                <div className="space-y-3 mt-6">
                   <a
                     href="/auth"
                     className="w-full flex items-center justify-center space-x-2 px-4 py-3 text-green-600 hover:bg-green-50 rounded-lg border border-green-100"
+                    onClick={() => setIsOpen(false)}
                   >
                     <span>Login</span>
                   </a>
                   <a
                     href="/signup"
                     className="w-full flex items-center justify-center space-x-2 px-4 py-3 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-lg"
+                    onClick={() => setIsOpen(false)}
                   >
                     <span>Sign Up</span>
                   </a>
