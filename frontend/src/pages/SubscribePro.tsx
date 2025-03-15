@@ -61,11 +61,7 @@ const SubscribePro: React.FC = () => {
 
   const handlePayment = async () => {
     if (!email) {
-      toast({
-        title: "Email Required",
-        description: "Please enter your email to continue",
-        variant: "destructive"
-      });
+      toast.error("Please enter your email to continue");
       return;
     }
 
@@ -114,8 +110,7 @@ const SubscribePro: React.FC = () => {
             // 5. Update user status and show success
             await refreshUserData(); // Changed from refreshUser to refreshUserData
             
-            toast({
-              title: "Success!",
+            toast("Success!", {
               description: "Your subscription has been activated successfully",
             });
             
@@ -124,17 +119,13 @@ const SubscribePro: React.FC = () => {
           } catch (verifyError) {
             console.error("Verification failed:", verifyError);
             setPaymentError("Payment was processed but verification failed. Please contact support.");
-            toast({
-              title: "Verification Failed",
-              description: "Your payment was processed but we couldn't verify it. Please contact support.",
-              variant: "destructive"
-            });
+            toast.error("Your payment was processed but we couldn't verify it. Please contact support.");
           }
         },
         prefill: {
           name: user?.firstName || "",
           email: email,
-          contact: user?.phone || ""
+          contact: user?.email || ""
         },
         theme: {
           color: "#22c55e"
@@ -153,11 +144,7 @@ const SubscribePro: React.FC = () => {
     } catch (error) {
       console.error("Payment initialization error:", error);
       setPaymentError("Payment initialization failed. Please try again.");
-      toast({
-        title: "Payment Failed",
-        description: "There was an error starting the payment process. Please try again.",
-        variant: "destructive"
-      });
+      toast.error("There was an error starting the payment process. Please try again.");
       setIsLoading(false);
     }
   };

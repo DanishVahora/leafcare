@@ -30,7 +30,7 @@ export const useFeatureAccess = () => {
         // Authenticated basic users get more scans than guests
         if (isAuthenticated) {
           // Check if monthly limit is reached (for non-pro users)
-          return user?.usageStats?.scanThisMonth < 5;
+          return (user?.usageStats?.scanThisMonth ?? 0) < 5;
         } 
         // Unauthenticated users get exactly one scan
         return usageCount < 1;
@@ -75,22 +75,20 @@ export const useFeatureAccess = () => {
 
       if (!hasAccess) {
         if (!isAuthenticated) {
-          toast({
-            title: "Access Limited",
-            description: "Create an account to unlock more plant scans.",
-            action: {
-              label: "Sign Up",
-              onClick: () => navigate("/signup"),
-            },
-          });
-        } else {
-          toast({
-            title: "Feature Locked",
-            description: "Upgrade to Pro for unlimited scans and more features.",
+          toast("Access Limited", {
+            description: `You've used ${usageCount} of your 5 free scans this month.`,
             action: {
               label: "Upgrade",
-              onClick: () => navigate("/SubToPro"),
-            },
+              onClick: () => navigate('/subscribe')
+            }
+          });
+        } else {
+          toast("Feature Locked", {
+            description: `This feature requires a Pro subscription.`,
+            action: {
+              label: "Get Pro",
+              onClick: () => navigate('/subscribe')
+            }
           });
         }
         return false;

@@ -62,7 +62,14 @@ export default function SignupPage() {
 
         // Handle successful login
         const { token, user } = response.data;
-        login(user);
+        console.log(user);
+        await login({
+          email: decoded.email,
+          accessToken: credentialResponse.credential,
+          given_name: decoded.given_name,
+          family_name: decoded.family_name,
+          picture: decoded.picture
+        });
         localStorage.setItem("token", token);
         navigate('/dashboard');
       } catch (error) {
@@ -121,10 +128,17 @@ export default function SignupPage() {
         // Assuming the backend returns user details & token after signup
         const { user, token } = response.data;
 
-        // Store the token (optional: in localStorage for persistence)
-        login(user);
+        // Login with the user data from the response
+        await login({
+          email: user.email,
+          firstName: user.firstName,
+          lastName: user.lastName,
+          password: formData.password,
+          // Use appropriate user data from your API response
+          // Don't reference credentialResponse here as it doesn't exist
+        });
+        
         localStorage.setItem("token", token);
-
         console.log('Signup successful, user logged in:', user);
         navigate('/dashboard');
       }

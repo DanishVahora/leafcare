@@ -6,7 +6,7 @@ interface AuthContextType {
   user: User | null;
   isAuthenticated: boolean;
   isLoading: boolean;
-  login: (email: string, password: string) => Promise<User>;
+  login: (userData:any) => Promise<User>;
   signup: (userData: any) => Promise<User>;
   logout: () => void;
   refreshUserData: () => Promise<void>;
@@ -55,12 +55,22 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       
       if (userData.accessToken) {
         // Handle Google OAuth login
-        response = await api.post('/auth/oauth/login', userData);
+        response = await api.post('/auth/oauth/login', {
+          provider: 'google',
+          email: userData.email,
+          firstName: userData.given_name,
+          lastName: userData.family_name,
+          photo: userData.picture,
+          accessToken: userData.accessToken
+        });
       } else {
         // Handle email/password login
-        response = await api.post('/auth/login', userData);
+        response = await api.post('/auth/login', {
+          email: userData.email,
+          password: userData.password
+        });
       }
-      
+  
       if (response.data?.token) {
         localStorage.setItem('token', response.data.token);
         api.defaults.headers.common['Authorization'] = `Bearer ${response.data.token}`;
@@ -79,7 +89,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       throw error;
     }
   };
-
   // Signup function
   const signup = async (userData: any) => {
     const response = await api.post('/auth/register', userData);

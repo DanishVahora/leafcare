@@ -48,7 +48,7 @@ const DetectionPage: React.FC = () => {
  
   // Access management
   const { isAuthenticated, user } = useAuth();
-  const { checkFeatureAccess, canAccessFeature, usageCount, setUsageCount } = useFeatureAccess();
+  const { canAccessFeature, usageCount } = useFeatureAccess();
   const [accessGranted, setAccessGranted] = useState(true);
   const { trackUsage } = useSubscription();
   const [userScansRemaining, setUserScansRemaining] = useState<number | null>(null);
@@ -160,9 +160,6 @@ const DetectionPage: React.FC = () => {
           // For guests, track locally (existing code)
           const newCount = usageCount + 1;
           localStorage.setItem('guestPredictionCount', newCount.toString());
-          if (typeof setUsageCount === 'function') {
-            setUsageCount(newCount);
-          }
         }
       } else {
         throw new Error('Invalid prediction response');
@@ -179,14 +176,14 @@ const DetectionPage: React.FC = () => {
   };
 
   // Add a reset function that can be called if needed
-  const resetScan = () => {
-    setImageSrc(null);
-    setPreprocessedImage(null);
-    setResults(null);
-    setTreatmentInfo(null);
-    setError(null);
-    setScanInProgress(false);
-  };
+  // const resetScan = () => {
+  //   setImageSrc(null);
+  //   setPreprocessedImage(null);
+  //   setResults(null);
+  //   setTreatmentInfo(null);
+  //   setError(null);
+  //   setScanInProgress(false);
+  // };
 
   // Modify onDrop to use the new access check
   const onDrop = useCallback(async (acceptedFiles: File[]) => {
@@ -463,27 +460,27 @@ Use straightforward language appropriate for farmers with basic education. Prior
 
   // Optional: Add a "Scan Another" button after results are displayed
   // This button would only be visible for users who have access
-  const renderScanAnotherButton = () => {
-    if (!results) return null;
+  // const _renderScanAnotherButton = () => {
+  //   if (!results) return null;
     
-    const hasAccess = isAuthenticated ? 
-      (user?.role === 'pro' || (user?.usageStats?.scanThisMonth || 0) < 5) : 
-      usageCount < 1;
+  //   const hasAccess = isAuthenticated ? 
+  //     (user?.role === 'pro' || (user?.usageStats?.scanThisMonth || 0) < 5) : 
+  //     usageCount < 1;
     
-    if (!hasAccess) return null;
+  //   if (!hasAccess) return null;
     
-    return (
-      <div className="text-center mt-8">
-        <Button
-          onClick={resetScan}
-          className="gap-2 bg-green-600 hover:bg-green-700"
-        >
-          <TestTube2 className="w-4 h-4" />
-          Scan Another Plant
-        </Button>
-      </div>
-    );
-  };
+  //   return (
+  //     <div className="text-center mt-8">
+  //       <Button
+  //         onClick={resetScan}
+  //         className="gap-2 bg-green-600 hover:bg-green-700"
+  //       >
+  //         <TestTube2 className="w-4 h-4" />
+  //         Scan Another Plant
+  //       </Button>
+  //     </div>
+  //   );
+  // };
 
   // Function to render treatment info with enhanced UI
   const renderTreatmentInfo = () => {
@@ -763,93 +760,92 @@ Use straightforward language appropriate for farmers with basic education. Prior
             </>
           )}
 
-
-{results && (
-  <Card className="p-6 shadow-lg mb-8">
-    <div className="space-y-6">
-      {results.error ? (
-        <div className="text-red-600 flex items-center gap-2">
-          <AlertCircle className="w-5 h-5" />
-          {results.error}
-        </div>
-      ) : (
-        <>
-          <div className="text-center">
-            <h2 className="text-2xl font-bold text-green-800 mb-2">
-              Detection Results
-            </h2>
-            <Badge variant="outline" className="text-lg py-1 px-3">
-              Confidence: {(results.confidence * 100).toFixed(1)}%
-            </Badge>
-          </div>
-
-          <div className="bg-green-50 rounded-xl p-6">
-            <h3 className="text-xl font-semibold mb-4 text-green-700">
-              {results.prediction.replace(/_/g, ' ')}
-            </h3>
-            
-            <div className="space-y-3">
-              <h4 className="font-semibold text-green-800">Top Predictions:</h4>
-              {results.top_3_predictions.map((pred: any, index: number) => (
-                <div 
-                  key={index} 
-                  className="flex justify-between items-center bg-white p-3 rounded-lg shadow-sm hover:shadow transition-shadow"
-                >
-                  <span className="text-gray-700">
-                    {pred.class.replace(/_/g, ' ')}
-                  </span>
-                  <Badge variant="secondary">
-                    {(pred.confidence * 100).toFixed(1)}%
-                  </Badge>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          <div className="mt-6">
-            <div className="flex justify-between items-center mb-4">
-              <h3 className="text-xl font-semibold text-green-700">Treatment Guide</h3>
-              <Button 
-                onClick={handleReadAloud} 
-                variant="outline" 
-                className={`gap-2 ${isReading ? 'bg-red-50' : 'bg-green-50'}`}
-                disabled={!treatmentInfo || loadingTreatment}
-              >
-                {isReading ? (
-                  <>
-                    <VolumeX className="w-4 h-4" />
-                    Stop Reading
-                  </>
+          {results && (
+            <Card className="p-6 shadow-lg mb-8">
+              <div className="space-y-6">
+                {results.error ? (
+                  <div className="text-red-600 flex items-center gap-2">
+                    <AlertCircle className="w-5 h-5" />
+                    {results.error}
+                  </div>
                 ) : (
                   <>
-                    <Volume2 className="w-4 h-4" />
-                    Read Aloud
+                    <div className="text-center">
+                      <h2 className="text-2xl font-bold text-green-800 mb-2">
+                        Detection Results
+                      </h2>
+                      <Badge variant="outline" className="text-lg py-1 px-3">
+                        Confidence: {(results.confidence * 100).toFixed(1)}%
+                      </Badge>
+                    </div>
+
+                    <div className="bg-green-50 rounded-xl p-6">
+                      <h3 className="text-xl font-semibold mb-4 text-green-700">
+                        {results.prediction.replace(/_/g, ' ')}
+                      </h3>
+                      
+                      <div className="space-y-3">
+                        <h4 className="font-semibold text-green-800">Top Predictions:</h4>
+                        {results.top_3_predictions.map((pred: any, index: number) => (
+                          <div 
+                            key={index} 
+                            className="flex justify-between items-center bg-white p-3 rounded-lg shadow-sm hover:shadow transition-shadow"
+                          >
+                            <span className="text-gray-700">
+                              {pred.class.replace(/_/g, ' ')}
+                            </span>
+                            <Badge variant="secondary">
+                              {(pred.confidence * 100).toFixed(1)}%
+                            </Badge>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div className="mt-6">
+                      <div className="flex justify-between items-center mb-4">
+                        <h3 className="text-xl font-semibold text-green-700">Treatment Guide</h3>
+                        <Button 
+                          onClick={handleReadAloud} 
+                          variant="outline" 
+                          className={`gap-2 ${isReading ? 'bg-red-50' : 'bg-green-50'}`}
+                          disabled={!treatmentInfo || loadingTreatment}
+                        >
+                          {isReading ? (
+                            <>
+                              <VolumeX className="w-4 h-4" />
+                              Stop Reading
+                            </>
+                          ) : (
+                            <>
+                              <Volume2 className="w-4 h-4" />
+                              Read Aloud
+                            </>
+                          )}
+                        </Button>
+                      </div>
+                      
+                      {loadingTreatment && (
+                        <div className="flex items-center gap-2 text-green-700 p-6 bg-green-50 rounded-xl">
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                          Loading treatment information...
+                        </div>
+                      )}
+
+                      {treatmentError && (
+                        <div className="text-red-600 flex items-center gap-2 p-6 bg-red-50 rounded-xl">
+                          <AlertCircle className="w-5 h-5" />
+                          {treatmentError}
+                        </div>
+                      )}
+
+                      {treatmentInfo && renderTreatmentInfo()}
+                    </div>
                   </>
                 )}
-              </Button>
-            </div>
-            
-            {loadingTreatment && (
-              <div className="flex items-center gap-2 text-green-700 p-6 bg-green-50 rounded-xl">
-                <Loader2 className="w-4 h-4 animate-spin" />
-                Loading treatment information...
               </div>
-            )}
-
-            {treatmentError && (
-              <div className="text-red-600 flex items-center gap-2 p-6 bg-red-50 rounded-xl">
-                <AlertCircle className="w-5 h-5" />
-                {treatmentError}
-              </div>
-            )}
-
-            {treatmentInfo && renderTreatmentInfo()}
-          </div>
-        </>
-      )}
-    </div>
-  </Card>
-)}
+            </Card>
+          )}
 
           {error && (
             <div className="text-red-600 flex items-center gap-2 mt-4 p-4 bg-red-50 rounded-lg">

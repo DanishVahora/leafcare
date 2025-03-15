@@ -1,7 +1,7 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useSubscription } from '@/hooks/useSubscription';
 import { loadRazorpayScript } from '@/lib/razorpay';
-import { SubscriptionPlan, PaymentVerificationData } from '@/types/subscription';
+import { SubscriptionPlan } from '@/types/subscription';
 import { Button } from '@/components/ui/button';
 import { toast } from "sonner";
 
@@ -15,11 +15,7 @@ export const SubscriptionManager = () => {
         const { plans } = await getPlans();
         setPlans(plans);
       } catch (err) {
-        toast({
-          title: "Error",
-          description: "Failed to fetch subscription plans",
-          variant: "destructive"
-        });
+        toast.error("Failed to fetch subscription plans");
       }
     };
 
@@ -35,27 +31,16 @@ export const SubscriptionManager = () => {
       const orderData = await createOrder(plan);
       
       // Initialize payment
-      await initializePayment(orderData, async (paymentData: PaymentVerificationData) => {
+      await initializePayment(orderData, async () => {
         try {
           // Handle successful payment
-          toast({
-            title: "Success",
-            description: "Subscription activated successfully!",
-          });
+          toast.success("Subscription activated successfully!");
         } catch (err) {
-          toast({
-            title: "Error",
-            description: "Failed to verify payment",
-            variant: "destructive"
-          });
+          toast.error("Failed to verify payment");
         }
       });
     } catch (err) {
-      toast({
-        title: "Error",
-        description: "Failed to initialize payment",
-        variant: "destructive"
-      });
+      toast.error("Failed to initialize payment");
     }
   };
 
