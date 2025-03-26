@@ -332,7 +332,7 @@ const SubscribePro: React.FC = () => {
       </motion.section>
 
       {/* BENEFITS SECTION */}
-      <motion.section
+      {/* <motion.section
         initial="hidden"
         whileInView="visible"
         viewport={{ once: true }}
@@ -369,7 +369,7 @@ const SubscribePro: React.FC = () => {
           </div>
 
         </div>
-      </motion.section>
+      </motion.section> */}
 
       {/* PRICING SECTION */}
       <section id="pricing-section" className="py-16 px-6 bg-gray-50">

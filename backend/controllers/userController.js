@@ -135,6 +135,55 @@ exports.changePassword = async (req, res) => {
   }
 };
 
+// Delete user account
+exports.deleteAccount = async (req, res) => {
+  try {
+    const { password } = req.body;
+    const user = await User.findById(req.user._id);
+
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    if (user.password && password) {
+      const isValid = await user.comparePassword(password);
+      if (!isValid) {
+        return res.status(401).json({ message: 'Invalid password' });
+      }
+    }
+
+    await User.findByIdAndDelete(req.user._id);
+    res.status(200).json({ message: 'Account deleted successfully' });
+  } catch (error) {
+    console.error('Error deleting account:', error);
+    res.status(500).json({ message: 'Failed to delete account' });
+  }
+};
+
+// Update user avatar
+exports.updateAvatar = async (req, res) => {
+  try {
+    const { photoUrl } = req.body;
+    
+    if (!photoUrl) {
+      return res.status(400).json({ message: 'Photo URL is required' });
+    }
+
+    const user = await User.findByIdAndUpdate(
+      req.user._id,
+      { $set: { photo: photoUrl } },
+      { new: true }
+    ).select('-password');
+
+    res.status(200).json({
+      message: 'Avatar updated successfully',
+      user
+    });
+  } catch (error) {
+    console.error('Error updating avatar:', error);
+    res.status(500).json({ message: 'Failed to update avatar' });
+  }
+};
 
 // For admin: Get all users
 exports.getAllUsers = async (req, res) => {

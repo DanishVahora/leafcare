@@ -23,7 +23,7 @@ const app = express();
 
 
 app.use(cors({
-  origin: ["http://localhost:3000", "http://localhost:5173","https://leafcare-production.up.railway.app"], // Allow both ports
+  origin: ["http://localhost:3000", "http://localhost:5173", "http://localhost:5174","https://leafcare-production.up.railway.app"], // Allow both ports
   credentials: true, 
   allowedHeaders: ["Content-Type", "Authorization"],
   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"]

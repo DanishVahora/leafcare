@@ -129,7 +129,7 @@ const DetectionPage: React.FC = () => {
       formData.append('file', blob, 'image.jpg');
 
       const response = await fetch(
-        "https://plant-diesase.kindmushroom-20b564e6.centralindia.azurecontainerapps.io/predict/",
+        "http://localhost:8000/predict",
         { method: 'POST', body: formData }
       );
 
