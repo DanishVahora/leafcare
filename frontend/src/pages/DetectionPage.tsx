@@ -40,6 +40,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import jsPDF from "jspdf";
+import { ShareDialog } from "@/components/ShareDialog";
 
 const fadeInUp = {
   hidden: { opacity: 0, y: 20 },
@@ -61,6 +62,7 @@ const DetectionPage: React.FC = () => {
   // Add this state to track when a scan is in progress
   const [scanInProgress, setScanInProgress] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [shareDialogOpen, setShareDialogOpen] = useState(false);
  
   // Access management
   const { isAuthenticated, user } = useAuth();
@@ -914,123 +916,108 @@ View full report: ${window.location.href}`;
             </div>
           </div>
 
-          <div className="mt-6">
-            <div className="flex justify-between items-center mb-4">
-              <h3 className="text-xl font-semibold text-green-700">Treatment Guide</h3>
-              <Button 
-                onClick={handleReadAloud} 
-                variant="outline" 
-                className={`gap-2 ${isReading ? 'bg-red-50' : 'bg-green-50'}`}
-                disabled={!treatmentInfo || loadingTreatment}
-              >
-                {isReading ? (
-                  <>
-                    <VolumeX className="w-4 h-4" />
-                    Stop Reading
-                  </>
-                ) : (
-                  <>
-                    <Volume2 className="w-4 h-4" />
-                    Read Aloud
-                  </>
-                )}
-              </Button>
-            </div>
-            
-            {loadingTreatment && (
-              <div className="flex items-center gap-2 text-green-700 p-6 bg-green-50 rounded-xl">
-                <Loader2 className="w-4 h-4 animate-spin" />
-                Loading treatment information...
-              </div>
-            )}
-
-            {treatmentError && (
-              <div className="text-red-600 flex items-center gap-2 p-6 bg-red-50 rounded-xl">
-                <AlertCircle className="w-5 h-5" />
-                {treatmentError}
-              </div>
-            )}
-
-            {treatmentInfo && renderTreatmentInfo()}
-          </div>
-
-          <div className="mt-6 flex justify-center gap-4">
-            <Button onClick={generatePDF} className="gap-2 bg-blue-600 hover:bg-blue-700">
-              <Download className="w-4 h-4" />
-              Download PDF
-            </Button>
-            <Button onClick={copyToClipboard} className="gap-2 bg-gray-600 hover:bg-gray-700">
-              <Copy className="w-4 h-4" />
-              {copied ? (
-                <>
-                  <Check className="w-4 h-4" />
-                  Copied
-                </>
-              ) : (
-                "Copy to Clipboard"
-              )}
-            </Button>
-            <Button onClick={shareViaEmail} className="gap-2 bg-red-600 hover:bg-red-700">
-              <Mail className="w-4 h-4" />
-              Share via Email
-            </Button>
-            <Button onClick={shareViaWhatsApp} className="gap-2 bg-green-600 hover:bg-green-700">
-              <MessageCircle className="w-4 h-4" />
-              Share via WhatsApp
-            </Button>
-          </div>
-
-          {results && (
-            <div className="flex justify-center gap-4 mt-6">
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="outline" className="gap-2">
-                    <Download className="w-4 h-4" />
-                    Download
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent>
-                  <DropdownMenuItem onClick={generatePDF}>
-                    <FileText className="w-4 h-4 mr-2" />
-                    Download PDF
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => window.print()}>
-                    <Printer className="w-4 h-4 mr-2" />
-                    Print Report
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="outline" className="gap-2">
-                    <Share2 className="w-4 h-4" />
-                    Share
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent>
-                  <DropdownMenuItem onClick={copyToClipboard}>
-                    {copied ? (
-                      <Check className="w-4 h-4 mr-2 text-green-600" />
+          {user?.role === 'pro' ? (
+            // Show treatment guide and sharing features only for pro users
+            <>
+              <div className="mt-6">
+                <div className="flex justify-between items-center mb-4">
+                  <h3 className="text-xl font-semibold text-green-700">Treatment Guide</h3>
+                  <Button 
+                    onClick={handleReadAloud} 
+                    variant="outline" 
+                    className={`gap-2 ${isReading ? 'bg-red-50' : 'bg-green-50'}`}
+                    disabled={!treatmentInfo || loadingTreatment}
+                  >
+                    {isReading ? (
+                      <>
+                        <VolumeX className="w-4 h-4" />
+                        Stop Reading
+                      </>
                     ) : (
-                      <Copy className="w-4 h-4 mr-2" />
+                      <>
+                        <Volume2 className="w-4 h-4" />
+                        Read Aloud
+                      </>
                     )}
-                    Copy to Clipboard
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={shareViaEmail}>
-                    <Mail className="w-4 h-4 mr-2" />
-                    Share via Email
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={shareViaWhatsApp}>
-                    <img 
-                      src="/whatsapp-icon.svg" 
-                      alt="WhatsApp" 
-                      className="w-4 h-4 mr-2"
-                    />
-                    Share via WhatsApp
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
+                  </Button>
+                </div>
+                
+                {loadingTreatment && (
+                  <div className="flex items-center gap-2 text-green-700 p-6 bg-green-50 rounded-xl">
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    Loading treatment information...
+                  </div>
+                )}
+
+                {treatmentError && (
+                  <div className="text-red-600 flex items-center gap-2 p-6 bg-red-50 rounded-xl">
+                    <AlertCircle className="w-5 h-5" />
+                    {treatmentError}
+                  </div>
+                )}
+
+                {treatmentInfo && renderTreatmentInfo()}
+              </div>
+
+              <div className="flex items-center justify-center gap-4 mt-8 border-t pt-8">
+                <Button
+                  onClick={generatePDF}
+                  variant="outline"
+                  className="h-12 px-6 gap-3 text-base"
+                >
+                  <Download className="w-5 h-5" />
+                  <div className="flex flex-col items-start">
+                    <span>Download Report</span>
+                    <span className="text-xs text-muted-foreground">Save as PDF</span>
+                  </div>
+                </Button>
+
+                <Button
+                  onClick={() => setShareDialogOpen(true)}
+                  className="h-12 px-6 gap-3 text-base bg-green-600 hover:bg-green-700"
+                >
+                  <Share2 className="w-5 h-5" />
+                  <div className="flex flex-col items-start">
+                    <span>Share Results</span>
+                    <span className="text-xs">Share via different platforms</span>
+                  </div>
+                </Button>
+
+                <ShareDialog
+                  open={shareDialogOpen}
+                  onOpenChange={setShareDialogOpen}
+                  onShare={{
+                    email: shareViaEmail,
+                    whatsapp: shareViaWhatsApp,
+                    clipboard: copyToClipboard,
+                  }}
+                  copied={copied}
+                  resultData={{
+                    disease: results.prediction.replace(/_/g, ' '),
+                    confidence: results.confidence,
+                  }}
+                />
+              </div>
+            </>
+          ) : (
+            // Show subscription prompt for non-pro users
+            <div className="mt-6 p-6 bg-amber-50 rounded-xl border border-amber-200">
+              <div className="flex flex-col items-center text-center gap-4">
+                <Shield className="w-12 h-12 text-amber-600" />
+                <h3 className="text-xl font-semibold text-amber-800">
+                  Unlock Premium Features
+                </h3>
+                <p className="text-amber-700 max-w-md">
+                  Subscribe to Pro to access detailed treatment guides, share results, 
+                  and download comprehensive reports.
+                </p>
+                <Button 
+                  onClick={() => window.location.href = '/SubToPro'}
+                  className="bg-amber-600 hover:bg-amber-700 text-white"
+                >
+                  Upgrade to Pro
+                </Button>
+              </div>
             </div>
           )}
         </>
