@@ -16,7 +16,15 @@ import {
   ShoppingBag, 
   BookOpen,
   Sprout,
-  Sparkles
+  Sparkles,
+  Download,
+  Share2,
+  FileText,
+  Printer,
+  Mail,
+  Copy,
+  Check,
+  MessageCircle 
 } from "lucide-react";
 import { motion } from "framer-motion";
 import { useDropzone } from "react-dropzone";
@@ -25,6 +33,13 @@ import { useAuth } from "@/context/AuthContext";
 import { UpgradePrompt } from "@/components/UpgradePrompt";
 import { useSubscription } from "@/hooks/useSubscription";
 import { toast } from "sonner";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import jsPDF from "jspdf";
 
 const fadeInUp = {
   hidden: { opacity: 0, y: 20 },
@@ -45,6 +60,7 @@ const DetectionPage: React.FC = () => {
   const speechSynthRef = useRef<SpeechSynthesisUtterance | null>(null);
   // Add this state to track when a scan is in progress
   const [scanInProgress, setScanInProgress] = useState(false);
+  const [copied, setCopied] = useState(false);
  
   // Access management
   const { isAuthenticated, user } = useAuth();
@@ -605,6 +621,98 @@ Use straightforward language appropriate for farmers with basic education. Prior
     };
   }, [isReading]);
 
+  // Function to generate PDF
+  const generatePDF = async () => {
+    try {
+      const doc = new jsPDF();
+      
+      // Add header
+      doc.setFontSize(20);
+      doc.text("Plant Disease Detection Report", 20, 20);
+      
+      // Add detection results
+      doc.setFontSize(14);
+      doc.text(`Disease: ${results.prediction.replace(/_/g, ' ')}`, 20, 40);
+      doc.text(`Confidence: ${(results.confidence * 100).toFixed(1)}%`, 20, 50);
+      
+      // Add treatment information
+      if (treatmentInfo) {
+        let yPos = 70;
+        Object.entries(treatmentInfo)
+          .filter(([key]) => key !== 'originalText')
+          .forEach(([section, items]) => {
+            doc.setFontSize(12);
+            doc.text(section, 20, yPos);
+            yPos += 10;
+            
+            if (Array.isArray(items)) {
+              items.forEach(item => {
+                const itemText = typeof item === 'string' ? item : 
+                  item.name ? `${item.name}: ${item.description}` :
+                  item.text || '';
+                doc.setFontSize(10);
+                doc.text(`• ${itemText}`, 25, yPos);
+                yPos += 10;
+              });
+            }
+            yPos += 5;
+          });
+      }
+      
+      doc.save('plant-disease-report.pdf');
+      toast.success('Report downloaded successfully');
+    } catch (error) {
+      console.error('Error generating PDF:', error);
+      toast.error('Failed to generate PDF');
+    }
+  };
+
+  // Function to copy to clipboard
+  const copyToClipboard = async () => {
+    try {
+      const text = `
+Plant Disease Detection Results
+Disease: ${results.prediction.replace(/_/g, ' ')}
+Confidence: ${(results.confidence * 100).toFixed(1)}%
+
+${Object.entries(treatmentInfo || {})
+  .filter(([key]) => key !== 'originalText')
+  .map(([section, items]) => `
+${section}:
+${Array.isArray(items) ? items.map(item => 
+  typeof item === 'string' ? `• ${item}` :
+  item.name ? `• ${item.name}: ${item.description}` :
+  item.text ? `• ${item.text}` : ''
+).join('\n') : ''}
+`).join('\n')}`;
+
+      await navigator.clipboard.writeText(text);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+      toast.success('Copied to clipboard');
+    } catch (error) {
+      toast.error('Failed to copy to clipboard');
+    }
+  };
+
+  // Function to share via email
+  const shareViaEmail = () => {
+    const subject = `Plant Disease Detection: ${results.prediction.replace(/_/g, ' ')}`;
+    const body = `I've detected ${results.prediction.replace(/_/g, ' ')} in my plant using LeafCare.
+    
+Confidence: ${(results.confidence * 100).toFixed(1)}%
+
+View full report: ${window.location.href}`;
+    
+    window.location.href = `mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+  };
+
+  // Function to share via WhatsApp
+  const shareViaWhatsApp = () => {
+    const text = `I've detected ${results.prediction.replace(/_/g, ' ')} in my plant using LeafCare with ${(results.confidence * 100).toFixed(1)}% confidence. Check it out!`;
+    window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
+  };
+
   return (
     <Layout>
       <div className="container mx-auto px-6 py-8">
@@ -845,6 +953,86 @@ Use straightforward language appropriate for farmers with basic education. Prior
 
             {treatmentInfo && renderTreatmentInfo()}
           </div>
+
+          <div className="mt-6 flex justify-center gap-4">
+            <Button onClick={generatePDF} className="gap-2 bg-blue-600 hover:bg-blue-700">
+              <Download className="w-4 h-4" />
+              Download PDF
+            </Button>
+            <Button onClick={copyToClipboard} className="gap-2 bg-gray-600 hover:bg-gray-700">
+              <Copy className="w-4 h-4" />
+              {copied ? (
+                <>
+                  <Check className="w-4 h-4" />
+                  Copied
+                </>
+              ) : (
+                "Copy to Clipboard"
+              )}
+            </Button>
+            <Button onClick={shareViaEmail} className="gap-2 bg-red-600 hover:bg-red-700">
+              <Mail className="w-4 h-4" />
+              Share via Email
+            </Button>
+            <Button onClick={shareViaWhatsApp} className="gap-2 bg-green-600 hover:bg-green-700">
+              <MessageCircle className="w-4 h-4" />
+              Share via WhatsApp
+            </Button>
+          </div>
+
+          {results && (
+            <div className="flex justify-center gap-4 mt-6">
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" className="gap-2">
+                    <Download className="w-4 h-4" />
+                    Download
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent>
+                  <DropdownMenuItem onClick={generatePDF}>
+                    <FileText className="w-4 h-4 mr-2" />
+                    Download PDF
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => window.print()}>
+                    <Printer className="w-4 h-4 mr-2" />
+                    Print Report
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" className="gap-2">
+                    <Share2 className="w-4 h-4" />
+                    Share
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent>
+                  <DropdownMenuItem onClick={copyToClipboard}>
+                    {copied ? (
+                      <Check className="w-4 h-4 mr-2 text-green-600" />
+                    ) : (
+                      <Copy className="w-4 h-4 mr-2" />
+                    )}
+                    Copy to Clipboard
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={shareViaEmail}>
+                    <Mail className="w-4 h-4 mr-2" />
+                    Share via Email
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={shareViaWhatsApp}>
+                    <img 
+                      src="/whatsapp-icon.svg" 
+                      alt="WhatsApp" 
+                      className="w-4 h-4 mr-2"
+                    />
+                    Share via WhatsApp
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
+          )}
         </>
       )}
     </div>
