@@ -9,7 +9,7 @@ interface AuthContextType {
   login: (userData:any) => Promise<User>;
   signup: (userData: any) => Promise<User>;
   logout: () => void;
-  refreshUserData: () => Promise<void>;
+  refreshUserData: () => Promise<void>; // Make sure this is included
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -130,7 +130,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       login,
       signup,
       logout,
-      refreshUserData
+      refreshUserData // Include in context value
     }}>
       {children}
     </AuthContext.Provider>

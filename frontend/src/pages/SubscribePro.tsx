@@ -45,7 +45,7 @@ const SubscribePro: React.FC = () => {
   
   // Add subscription hook and auth context
   const { createOrder, verifyPayment } = useSubscription();
-  const { user, refreshUserData } = useAuth(); // Changed from refreshUser to refreshUserData
+  const { user, refreshUserData } = useAuth();
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -61,7 +61,11 @@ const SubscribePro: React.FC = () => {
 
   const handlePayment = async () => {
     if (!email) {
-      toast.error("Please enter your email to continue");
+      toast({
+        title: "Email Required",
+        description: "Please enter your email to continue",
+        variant: "destructive"
+      });
       return;
     }
 
@@ -108,9 +112,10 @@ const SubscribePro: React.FC = () => {
             console.log("Payment verified:", result);
             
             // 5. Update user status and show success
-            await refreshUserData(); // Changed from refreshUser to refreshUserData
+            await refreshUserData();
             
-            toast("Success!", {
+            toast({
+              title: "Success!",
               description: "Your subscription has been activated successfully",
             });
             
@@ -119,13 +124,17 @@ const SubscribePro: React.FC = () => {
           } catch (verifyError) {
             console.error("Verification failed:", verifyError);
             setPaymentError("Payment was processed but verification failed. Please contact support.");
-            toast.error("Your payment was processed but we couldn't verify it. Please contact support.");
+            toast({
+              title: "Verification Failed",
+              description: "Your payment was processed but we couldn't verify it. Please contact support.",
+              variant: "destructive"
+            });
           }
         },
         prefill: {
           name: user?.firstName || "",
           email: email,
-          contact: user?.email || ""
+          contact: user?.phone || ""
         },
         theme: {
           color: "#22c55e"
@@ -144,7 +153,11 @@ const SubscribePro: React.FC = () => {
     } catch (error) {
       console.error("Payment initialization error:", error);
       setPaymentError("Payment initialization failed. Please try again.");
-      toast.error("There was an error starting the payment process. Please try again.");
+      toast({
+        title: "Payment Failed",
+        description: "There was an error starting the payment process. Please try again.",
+        variant: "destructive"
+      });
       setIsLoading(false);
     }
   };
@@ -319,7 +332,7 @@ const SubscribePro: React.FC = () => {
       </motion.section>
 
       {/* BENEFITS SECTION */}
-      <motion.section
+      {/* <motion.section
         initial="hidden"
         whileInView="visible"
         viewport={{ once: true }}
@@ -356,7 +369,7 @@ const SubscribePro: React.FC = () => {
           </div>
 
         </div>
-      </motion.section>
+      </motion.section> */}
 
       {/* PRICING SECTION */}
       <section id="pricing-section" className="py-16 px-6 bg-gray-50">

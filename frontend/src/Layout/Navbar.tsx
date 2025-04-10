@@ -22,6 +22,7 @@ const NAV_LINKS = [
   { name: 'Detection', path: '/detect', icon: Camera },
   { name: 'Docs', path: '/docs', icon: BookOpen },
   { name: 'History', path: '/history', icon: Clock },
+  // { name: 'Profile', path: '/profile', icon: Clock },
 ];
 
 export const Navbar: React.FC<NavbarProps> = ({ showFullMenu = true }) => {
@@ -122,7 +123,7 @@ export const Navbar: React.FC<NavbarProps> = ({ showFullMenu = true }) => {
                       <div className="relative">
                         <div className="absolute inset-0 rounded-full opacity-0 group-hover:opacity-100 transition-opacity" />
                         <img
-                          src={user.photo || '/user-profile.svg'}
+                          src={ '/user-profile.svg'}
                           alt="Profile"
                           className="h-8 w-8 lg:h-9 lg:w-9 rounded-full border-2 border-green-100 group-hover:border-transparent transition-all"
                         />

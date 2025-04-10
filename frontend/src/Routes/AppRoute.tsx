@@ -11,7 +11,6 @@ import SubscribePro from '@/pages/SubscribePro';
 import {DocumentPage} from '@/pages/DocumentPage';
 import { SubscriptionManager } from '@/components/SubscriptionManager';
 import HistoryPage from '@/pages/HistoryPage';
-
 export const AppRoute = () => {
   return (
     <Routes>
@@ -24,6 +23,8 @@ export const AppRoute = () => {
           <Authentication />
         </PublicRoute>
       } />
+      {/* <Route path="/profile" element={
+      } /> */}
 
       <Route path="/signup" element={
         <PublicRoute>

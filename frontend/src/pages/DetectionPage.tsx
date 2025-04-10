@@ -16,7 +16,15 @@ import {
   ShoppingBag, 
   BookOpen,
   Sprout,
-  Sparkles
+  Sparkles,
+  Download,
+  Share2,
+  FileText,
+  Printer,
+  Mail,
+  Copy,
+  Check,
+  MessageCircle 
 } from "lucide-react";
 import { motion } from "framer-motion";
 import { useDropzone } from "react-dropzone";
@@ -25,6 +33,14 @@ import { useAuth } from "@/context/AuthContext";
 import { UpgradePrompt } from "@/components/UpgradePrompt";
 import { useSubscription } from "@/hooks/useSubscription";
 import { toast } from "sonner";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import jsPDF from "jspdf";
+import { ShareDialog } from "@/components/ShareDialog";
 
 const fadeInUp = {
   hidden: { opacity: 0, y: 20 },
@@ -45,10 +61,12 @@ const DetectionPage: React.FC = () => {
   const speechSynthRef = useRef<SpeechSynthesisUtterance | null>(null);
   // Add this state to track when a scan is in progress
   const [scanInProgress, setScanInProgress] = useState(false);
+  const [copied, setCopied] = useState(false);
+  const [shareDialogOpen, setShareDialogOpen] = useState(false);
  
   // Access management
   const { isAuthenticated, user } = useAuth();
-  const { canAccessFeature, usageCount } = useFeatureAccess();
+  const { checkFeatureAccess, canAccessFeature, usageCount, setUsageCount } = useFeatureAccess();
   const [accessGranted, setAccessGranted] = useState(true);
   const { trackUsage } = useSubscription();
   const [userScansRemaining, setUserScansRemaining] = useState<number | null>(null);
@@ -129,7 +147,7 @@ const DetectionPage: React.FC = () => {
       formData.append('file', blob, 'image.jpg');
 
       const response = await fetch(
-        "https://plant-diesase.kindmushroom-20b564e6.centralindia.azurecontainerapps.io/predict/",
+        "http://localhost:8000/predict",
         { method: 'POST', body: formData }
       );
 
@@ -160,6 +178,9 @@ const DetectionPage: React.FC = () => {
           // For guests, track locally (existing code)
           const newCount = usageCount + 1;
           localStorage.setItem('guestPredictionCount', newCount.toString());
+          if (typeof setUsageCount === 'function') {
+            setUsageCount(newCount);
+          }
         }
       } else {
         throw new Error('Invalid prediction response');
@@ -176,14 +197,14 @@ const DetectionPage: React.FC = () => {
   };
 
   // Add a reset function that can be called if needed
-  // const resetScan = () => {
-  //   setImageSrc(null);
-  //   setPreprocessedImage(null);
-  //   setResults(null);
-  //   setTreatmentInfo(null);
-  //   setError(null);
-  //   setScanInProgress(false);
-  // };
+  const resetScan = () => {
+    setImageSrc(null);
+    setPreprocessedImage(null);
+    setResults(null);
+    setTreatmentInfo(null);
+    setError(null);
+    setScanInProgress(false);
+  };
 
   // Modify onDrop to use the new access check
   const onDrop = useCallback(async (acceptedFiles: File[]) => {
@@ -460,27 +481,27 @@ Use straightforward language appropriate for farmers with basic education. Prior
 
   // Optional: Add a "Scan Another" button after results are displayed
   // This button would only be visible for users who have access
-  // const _renderScanAnotherButton = () => {
-  //   if (!results) return null;
+  const renderScanAnotherButton = () => {
+    if (!results) return null;
     
-  //   const hasAccess = isAuthenticated ? 
-  //     (user?.role === 'pro' || (user?.usageStats?.scanThisMonth || 0) < 5) : 
-  //     usageCount < 1;
+    const hasAccess = isAuthenticated ? 
+      (user?.role === 'pro' || (user?.usageStats?.scanThisMonth || 0) < 5) : 
+      usageCount < 1;
     
-  //   if (!hasAccess) return null;
+    if (!hasAccess) return null;
     
-  //   return (
-  //     <div className="text-center mt-8">
-  //       <Button
-  //         onClick={resetScan}
-  //         className="gap-2 bg-green-600 hover:bg-green-700"
-  //       >
-  //         <TestTube2 className="w-4 h-4" />
-  //         Scan Another Plant
-  //       </Button>
-  //     </div>
-  //   );
-  // };
+    return (
+      <div className="text-center mt-8">
+        <Button
+          onClick={resetScan}
+          className="gap-2 bg-green-600 hover:bg-green-700"
+        >
+          <TestTube2 className="w-4 h-4" />
+          Scan Another Plant
+        </Button>
+      </div>
+    );
+  };
 
   // Function to render treatment info with enhanced UI
   const renderTreatmentInfo = () => {
@@ -601,6 +622,98 @@ Use straightforward language appropriate for farmers with basic education. Prior
       }
     };
   }, [isReading]);
+
+  // Function to generate PDF
+  const generatePDF = async () => {
+    try {
+      const doc = new jsPDF();
+      
+      // Add header
+      doc.setFontSize(20);
+      doc.text("Plant Disease Detection Report", 20, 20);
+      
+      // Add detection results
+      doc.setFontSize(14);
+      doc.text(`Disease: ${results.prediction.replace(/_/g, ' ')}`, 20, 40);
+      doc.text(`Confidence: ${(results.confidence * 100).toFixed(1)}%`, 20, 50);
+      
+      // Add treatment information
+      if (treatmentInfo) {
+        let yPos = 70;
+        Object.entries(treatmentInfo)
+          .filter(([key]) => key !== 'originalText')
+          .forEach(([section, items]) => {
+            doc.setFontSize(12);
+            doc.text(section, 20, yPos);
+            yPos += 10;
+            
+            if (Array.isArray(items)) {
+              items.forEach(item => {
+                const itemText = typeof item === 'string' ? item : 
+                  item.name ? `${item.name}: ${item.description}` :
+                  item.text || '';
+                doc.setFontSize(10);
+                doc.text(`• ${itemText}`, 25, yPos);
+                yPos += 10;
+              });
+            }
+            yPos += 5;
+          });
+      }
+      
+      doc.save('plant-disease-report.pdf');
+      toast.success('Report downloaded successfully');
+    } catch (error) {
+      console.error('Error generating PDF:', error);
+      toast.error('Failed to generate PDF');
+    }
+  };
+
+  // Function to copy to clipboard
+  const copyToClipboard = async () => {
+    try {
+      const text = `
+Plant Disease Detection Results
+Disease: ${results.prediction.replace(/_/g, ' ')}
+Confidence: ${(results.confidence * 100).toFixed(1)}%
+
+${Object.entries(treatmentInfo || {})
+  .filter(([key]) => key !== 'originalText')
+  .map(([section, items]) => `
+${section}:
+${Array.isArray(items) ? items.map(item => 
+  typeof item === 'string' ? `• ${item}` :
+  item.name ? `• ${item.name}: ${item.description}` :
+  item.text ? `• ${item.text}` : ''
+).join('\n') : ''}
+`).join('\n')}`;
+
+      await navigator.clipboard.writeText(text);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+      toast.success('Copied to clipboard');
+    } catch (error) {
+      toast.error('Failed to copy to clipboard');
+    }
+  };
+
+  // Function to share via email
+  const shareViaEmail = () => {
+    const subject = `Plant Disease Detection: ${results.prediction.replace(/_/g, ' ')}`;
+    const body = `I've detected ${results.prediction.replace(/_/g, ' ')} in my plant using LeafCare.
+    
+Confidence: ${(results.confidence * 100).toFixed(1)}%
+
+View full report: ${window.location.href}`;
+    
+    window.location.href = `mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+  };
+
+  // Function to share via WhatsApp
+  const shareViaWhatsApp = () => {
+    const text = `I've detected ${results.prediction.replace(/_/g, ' ')} in my plant using LeafCare with ${(results.confidence * 100).toFixed(1)}% confidence. Check it out!`;
+    window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
+  };
 
   return (
     <Layout>
@@ -760,92 +873,158 @@ Use straightforward language appropriate for farmers with basic education. Prior
             </>
           )}
 
-          {results && (
-            <Card className="p-6 shadow-lg mb-8">
-              <div className="space-y-6">
-                {results.error ? (
-                  <div className="text-red-600 flex items-center gap-2">
-                    <AlertCircle className="w-5 h-5" />
-                    {results.error}
+
+{results && (
+  <Card className="p-6 shadow-lg mb-8">
+    <div className="space-y-6">
+      {results.error ? (
+        <div className="text-red-600 flex items-center gap-2">
+          <AlertCircle className="w-5 h-5" />
+          {results.error}
+        </div>
+      ) : (
+        <>
+          <div className="text-center">
+            <h2 className="text-2xl font-bold text-green-800 mb-2">
+              Detection Results
+            </h2>
+            <Badge variant="outline" className="text-lg py-1 px-3">
+              Confidence: {(results.confidence * 100).toFixed(1)}%
+            </Badge>
+          </div>
+
+          <div className="bg-green-50 rounded-xl p-6">
+            <h3 className="text-xl font-semibold mb-4 text-green-700">
+              {results.prediction.replace(/_/g, ' ')}
+            </h3>
+            
+            <div className="space-y-3">
+              <h4 className="font-semibold text-green-800">Top Predictions:</h4>
+              {results.top_3_predictions.map((pred: any, index: number) => (
+                <div 
+                  key={index} 
+                  className="flex justify-between items-center bg-white p-3 rounded-lg shadow-sm hover:shadow transition-shadow"
+                >
+                  <span className="text-gray-700">
+                    {pred.class.replace(/_/g, ' ')}
+                  </span>
+                  <Badge variant="secondary">
+                    {(pred.confidence * 100).toFixed(1)}%
+                  </Badge>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {user?.role === 'pro' ? (
+            // Show treatment guide and sharing features only for pro users
+            <>
+              <div className="mt-6">
+                <div className="flex justify-between items-center mb-4">
+                  <h3 className="text-xl font-semibold text-green-700">Treatment Guide</h3>
+                  <Button 
+                    onClick={handleReadAloud} 
+                    variant="outline" 
+                    className={`gap-2 ${isReading ? 'bg-red-50' : 'bg-green-50'}`}
+                    disabled={!treatmentInfo || loadingTreatment}
+                  >
+                    {isReading ? (
+                      <>
+                        <VolumeX className="w-4 h-4" />
+                        Stop Reading
+                      </>
+                    ) : (
+                      <>
+                        <Volume2 className="w-4 h-4" />
+                        Read Aloud
+                      </>
+                    )}
+                  </Button>
+                </div>
+                
+                {loadingTreatment && (
+                  <div className="flex items-center gap-2 text-green-700 p-6 bg-green-50 rounded-xl">
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    Loading treatment information...
                   </div>
-                ) : (
-                  <>
-                    <div className="text-center">
-                      <h2 className="text-2xl font-bold text-green-800 mb-2">
-                        Detection Results
-                      </h2>
-                      <Badge variant="outline" className="text-lg py-1 px-3">
-                        Confidence: {(results.confidence * 100).toFixed(1)}%
-                      </Badge>
-                    </div>
-
-                    <div className="bg-green-50 rounded-xl p-6">
-                      <h3 className="text-xl font-semibold mb-4 text-green-700">
-                        {results.prediction.replace(/_/g, ' ')}
-                      </h3>
-                      
-                      <div className="space-y-3">
-                        <h4 className="font-semibold text-green-800">Top Predictions:</h4>
-                        {results.top_3_predictions.map((pred: any, index: number) => (
-                          <div 
-                            key={index} 
-                            className="flex justify-between items-center bg-white p-3 rounded-lg shadow-sm hover:shadow transition-shadow"
-                          >
-                            <span className="text-gray-700">
-                              {pred.class.replace(/_/g, ' ')}
-                            </span>
-                            <Badge variant="secondary">
-                              {(pred.confidence * 100).toFixed(1)}%
-                            </Badge>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-
-                    <div className="mt-6">
-                      <div className="flex justify-between items-center mb-4">
-                        <h3 className="text-xl font-semibold text-green-700">Treatment Guide</h3>
-                        <Button 
-                          onClick={handleReadAloud} 
-                          variant="outline" 
-                          className={`gap-2 ${isReading ? 'bg-red-50' : 'bg-green-50'}`}
-                          disabled={!treatmentInfo || loadingTreatment}
-                        >
-                          {isReading ? (
-                            <>
-                              <VolumeX className="w-4 h-4" />
-                              Stop Reading
-                            </>
-                          ) : (
-                            <>
-                              <Volume2 className="w-4 h-4" />
-                              Read Aloud
-                            </>
-                          )}
-                        </Button>
-                      </div>
-                      
-                      {loadingTreatment && (
-                        <div className="flex items-center gap-2 text-green-700 p-6 bg-green-50 rounded-xl">
-                          <Loader2 className="w-4 h-4 animate-spin" />
-                          Loading treatment information...
-                        </div>
-                      )}
-
-                      {treatmentError && (
-                        <div className="text-red-600 flex items-center gap-2 p-6 bg-red-50 rounded-xl">
-                          <AlertCircle className="w-5 h-5" />
-                          {treatmentError}
-                        </div>
-                      )}
-
-                      {treatmentInfo && renderTreatmentInfo()}
-                    </div>
-                  </>
                 )}
+
+                {treatmentError && (
+                  <div className="text-red-600 flex items-center gap-2 p-6 bg-red-50 rounded-xl">
+                    <AlertCircle className="w-5 h-5" />
+                    {treatmentError}
+                  </div>
+                )}
+
+                {treatmentInfo && renderTreatmentInfo()}
               </div>
-            </Card>
+
+              <div className="flex items-center justify-center gap-4 mt-8 border-t pt-8">
+                <Button
+                  onClick={generatePDF}
+                  variant="outline"
+                  className="h-12 px-6 gap-3 text-base"
+                >
+                  <Download className="w-5 h-5" />
+                  <div className="flex flex-col items-start">
+                    <span>Download Report</span>
+                    <span className="text-xs text-muted-foreground">Save as PDF</span>
+                  </div>
+                </Button>
+
+                <Button
+                  onClick={() => setShareDialogOpen(true)}
+                  className="h-12 px-6 gap-3 text-base bg-green-600 hover:bg-green-700"
+                >
+                  <Share2 className="w-5 h-5" />
+                  <div className="flex flex-col items-start">
+                    <span>Share Results</span>
+                    <span className="text-xs">Share via different platforms</span>
+                  </div>
+                </Button>
+
+                <ShareDialog
+                  open={shareDialogOpen}
+                  onOpenChange={setShareDialogOpen}
+                  onShare={{
+                    email: shareViaEmail,
+                    whatsapp: shareViaWhatsApp,
+                    clipboard: copyToClipboard,
+                  }}
+                  copied={copied}
+                  resultData={{
+                    disease: results.prediction.replace(/_/g, ' '),
+                    confidence: results.confidence,
+                  }}
+                />
+              </div>
+            </>
+          ) : (
+            // Show subscription prompt for non-pro users
+            <div className="mt-6 p-6 bg-amber-50 rounded-xl border border-amber-200">
+              <div className="flex flex-col items-center text-center gap-4">
+                <Shield className="w-12 h-12 text-amber-600" />
+                <h3 className="text-xl font-semibold text-amber-800">
+                  Unlock Premium Features
+                </h3>
+                <p className="text-amber-700 max-w-md">
+                  Subscribe to Pro to access detailed treatment guides, share results, 
+                  and download comprehensive reports.
+                </p>
+                <Button 
+                  onClick={() => window.location.href = '/SubToPro'}
+                  className="bg-amber-600 hover:bg-amber-700 text-white"
+                >
+                  Upgrade to Pro
+                </Button>
+              </div>
+            </div>
           )}
+        </>
+      )}
+    </div>
+  </Card>
+)}
 
           {error && (
             <div className="text-red-600 flex items-center gap-2 mt-4 p-4 bg-red-50 rounded-lg">
