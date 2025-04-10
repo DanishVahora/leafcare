@@ -45,7 +45,7 @@ const SubscribePro: React.FC = () => {
   
   // Add subscription hook and auth context
   const { createOrder, verifyPayment } = useSubscription();
-  const { user, refreshUser } = useAuth();
+  const { user, refreshUserData } = useAuth();
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -112,7 +112,7 @@ const SubscribePro: React.FC = () => {
             console.log("Payment verified:", result);
             
             // 5. Update user status and show success
-            await refreshUser();
+            await refreshUserData();
             
             toast({
               title: "Success!",
