@@ -4,12 +4,20 @@ import { Separator } from '../components/ui/separator';
 import { useAuth } from '../context/AuthContext';
 import { GoogleLogin, CredentialResponse } from '@react-oauth/google';
 import { jwtDecode } from 'jwt-decode';
-import { User } from './types';
 import Layout from '../Layout/Layout';
 import axios from 'axios';
 import { useNavigate, Link } from 'react-router-dom';
-import { API_BASE_URL } from '../config/config';
 import { googleOAuthConfig } from '../config/oauthConfig';
+
+// Add DecodedGoogleToken interface
+interface DecodedGoogleToken {
+  email: string;
+  given_name: string;
+  family_name: string;
+  picture: string;
+  exp: number;
+  sub: string;
+}
 
 interface FormElements extends HTMLFormControlsCollection {
   email: HTMLInputElement;
@@ -38,14 +46,13 @@ const Authentication = () => {
     try {
       const decoded = jwtDecode<DecodedGoogleToken>(credentialResponse.credential);
       
-      // Call the login function with Google data
+      // Call login with Google user data
       await login({
-        provider: 'google',
         accessToken: credentialResponse.credential,
         email: decoded.email,
-        firstName: decoded.given_name,
-        lastName: decoded.family_name,
-        photo: decoded.picture,
+        given_name: decoded.given_name,
+        family_name: decoded.family_name,
+        picture: decoded.picture
       });
   
       navigate('/dashboard');
@@ -67,23 +74,17 @@ const Authentication = () => {
     const password = form.elements.password.value;
   
     try {
-      const response = await axios.post(`${API_BASE_URL}/auth/login`, {
+      // Call login with email/password data
+      await login({
         email,
-        password,
+        password
       });
-  
-      const { token, user } = response.data;
-      if (!token) {
-        throw new Error("Token not received from backend");
-      }
-  
-      login(user);
-      localStorage.setItem("token", token); // Save token
+      
       navigate('/dashboard');
-    } catch (error: unknown) {
+    } catch (error) {
       console.error('Login failed:', error);
-      if (axios.isAxiosError(error) && error.response) {
-        setError(error.response.data?.message || 'Invalid email or password');
+      if (axios.isAxiosError(error)) {
+        setError(error.response?.data?.message || 'Invalid email or password');
       } else {
         setError('An unexpected error occurred');
       }

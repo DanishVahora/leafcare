@@ -1,8 +1,7 @@
 import { useState, useCallback, useEffect } from 'react';
 import { subscriptionService } from '@/services/subscriptionService';
-import { SubscriptionDetails, SubscriptionPlan, OrderResponse, PaymentVerificationData } from '@/types/subscription';
+import { SubscriptionDetails, OrderResponse, PaymentVerificationData } from '@/types/subscription';
 import { useAuth } from '@/context/AuthContext';
-import { toast } from 'sonner';
 
 export const useSubscription = () => {
   const [subscription, setSubscription] = useState<SubscriptionDetails | null>(null);

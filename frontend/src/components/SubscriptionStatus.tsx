@@ -4,9 +4,15 @@ import { useSubscription } from '@/hooks/useSubscription';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { format } from 'date-fns';
+// Replace date-fns import with direct JavaScript date formatting
 import { CalendarIcon, CheckCircle, AlertCircle, Clock } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+
+// Helper function to format dates since we're not using date-fns
+const formatDate = (date: string) => {
+  const d = new Date(date);
+  return d.toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' });
+};
 
 export const SubscriptionStatus: React.FC = () => {
   const [subscription, setSubscription] = useState<SubscriptionDetails | null>(null);
@@ -64,7 +70,8 @@ export const SubscriptionStatus: React.FC = () => {
       <CardHeader>
         <div className="flex justify-between items-center">
           <CardTitle>Subscription Status</CardTitle>
-          <Badge variant={subscription.status === 'active' ? 'success' : 'outline'}>
+          <Badge variant={subscription.status === 'active' ? 'default' : 'outline'} 
+                 className={subscription.status === 'active' ? 'bg-green-500 text-white' : ''}>
             {subscription.status === 'active' ? (
               <>
                 <CheckCircle className="w-4 h-4 mr-1" /> Active
@@ -91,7 +98,7 @@ export const SubscriptionStatus: React.FC = () => {
             <span className="text-gray-600">Start Date:</span>
             <span className="flex items-center">
               <CalendarIcon className="w-4 h-4 mr-1" />
-              {format(new Date(subscription.startDate), 'MMM dd, yyyy')}
+              {formatDate(subscription.startDate)}
             </span>
           </div>
           
@@ -99,7 +106,7 @@ export const SubscriptionStatus: React.FC = () => {
             <span className="text-gray-600">Renewal Date:</span>
             <span className="font-medium flex items-center">
               <CalendarIcon className="w-4 h-4 mr-1" />
-              {format(new Date(subscription.endDate), 'MMM dd, yyyy')}
+              {formatDate(subscription.endDate)}
             </span>
           </div>
           
