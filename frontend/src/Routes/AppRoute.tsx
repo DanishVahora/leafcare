@@ -11,11 +11,15 @@ import SubscribePro from '@/pages/SubscribePro';
 import {DocumentPage} from '@/pages/DocumentPage';
 import { SubscriptionManager } from '@/components/SubscriptionManager';
 import HistoryPage from '@/pages/HistoryPage';
+import Privacy from '@/pages/Privacy';
+import Terms from '@/pages/Terms';
 export const AppRoute = () => {
   return (
     <Routes>
       {/* Public routes */}
       <Route path="/" element={<HomePage />} />
+      <Route path="/privacy" element={<Privacy />} />
+      <Route path="/terms" element={<Terms />} />
 
       {/* Auth routes */}
       <Route path="/auth" element={
