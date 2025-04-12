@@ -1,5 +1,5 @@
 import React from 'react';
-import { Leaf, Github, Twitter, Linkedin, Camera, BookOpen, Clock } from 'lucide-react';
+import { Leaf, Github, Twitter, Linkedin, Camera, BookOpen, Clock, Send } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { FloatingSubscribe } from '@/components/ui/FloatingSubscribe';
 
@@ -76,25 +76,19 @@ export const Footer: React.FC = () => {
             </ul>
           </div>
 
-          {/* Newsletter */}
+          {/* Contact Us */}
           <div>
-            <h3 className="font-semibold text-gray-900 mb-4">Stay Updated</h3>
+            <h3 className="font-semibold text-gray-900 mb-4">Contact Us</h3>
             <p className="text-sm md:text-base text-gray-600 mb-4">
-              Subscribe to our newsletter for the latest updates.
+              Have questions or feedback? We're here to help.
             </p>
-            <form className="space-y-2">
-              <input
-                type="email"
-                placeholder="Enter your email"
-                className="w-full px-3 py-2 text-sm md:text-base border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 transition-all"
-              />
-              <button
-                type="submit"
-                className="w-full bg-gradient-to-r from-green-600 to-emerald-600 text-white px-4 py-2 rounded-lg hover:shadow-md transition-all text-sm md:text-base"
-              >
-                Subscribe
-              </button>
-            </form>
+            <Link 
+              to="/contact" 
+              className="inline-flex items-center gap-2 text-green-600 hover:text-green-700 transition-colors"
+            >
+              <Send className="h-4 w-4" />
+              <span>Send us a message</span>
+            </Link>
           </div>
         </div>
 

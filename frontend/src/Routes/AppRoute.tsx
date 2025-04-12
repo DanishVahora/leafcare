@@ -13,6 +13,8 @@ import { SubscriptionManager } from '@/components/SubscriptionManager';
 import HistoryPage from '@/pages/HistoryPage';
 import Privacy from '@/pages/Privacy';
 import Terms from '@/pages/Terms';
+import Contact from '@/pages/Contact';
+
 export const AppRoute = () => {
   return (
     <Routes>
@@ -20,6 +22,7 @@ export const AppRoute = () => {
       <Route path="/" element={<HomePage />} />
       <Route path="/privacy" element={<Privacy />} />
       <Route path="/terms" element={<Terms />} />
+      <Route path="/contact" element={<Contact />} />
 
       {/* Auth routes */}
       <Route path="/auth" element={
