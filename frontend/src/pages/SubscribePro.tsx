@@ -15,6 +15,7 @@ import { toast } from "sonner";
 import { useAuth } from "@/context/AuthContext";
 import { useNavigate } from "react-router-dom";
 import { PaymentVerificationData } from "@/types/subscription";
+import { Shield } from 'lucide-react';
 
 declare global {
   interface Window {
@@ -47,6 +48,7 @@ const SubscribePro: React.FC = () => {
   const { createOrder, verifyPayment } = useSubscription();
   const { user, refreshUserData } = useAuth();
   const navigate = useNavigate();
+  const isPro = user && (user.role === 'pro' || user.role === 'admin');
 
   useEffect(() => {
     const handleScroll = () => {
@@ -262,6 +264,34 @@ const SubscribePro: React.FC = () => {
   //   exit: { height: 0, opacity: 0 }
   // };
 
+  // Render alternative content for pro users
+  if (isPro) {
+    return (
+      <Layout>
+        <div className="container mx-auto px-6 py-16">
+          <div className="max-w-2xl mx-auto text-center">
+            <div className="mb-6 inline-block p-3 bg-green-100 rounded-full">
+              <Shield className="w-8 h-8 text-green-600" />
+            </div>
+            <h1 className="text-3xl font-bold text-gray-900 mb-4">
+              You're Already a Pro Member
+            </h1>
+            <p className="text-lg text-gray-600 mb-8">
+              You already have access to all premium features. Thank you for being a valued LeafCare Pro member.
+            </p>
+            <Button
+              onClick={() => navigate('/dashboard')}
+              className="bg-green-600 hover:bg-green-700 text-white"
+            >
+              Go to Dashboard
+            </Button>
+          </div>
+        </div>
+      </Layout>
+    );
+  }
+
+  // Original subscription page content continues below...
   return (
     <Layout>
       <ScrollProgress />

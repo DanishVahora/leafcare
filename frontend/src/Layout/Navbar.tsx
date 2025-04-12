@@ -9,27 +9,34 @@ import {
   LogOut,
   User,
   Menu,
-  X
+  X,
+  Sparkles
 } from 'lucide-react';
+import { Badge } from '@/components/ui/badge'; // Adjust the path based on your project structure
 import { cn } from '@/lib/utils';
 
 interface NavbarProps {
   showFullMenu?: boolean;
 }
 
-const NAV_LINKS = [
-  { name: 'Dashboard', path: '/dashboard', icon: Leaf },
-  { name: 'Detection', path: '/detect', icon: Camera },
-  { name: 'Docs', path: '/docs', icon: BookOpen },
-  { name: 'History', path: '/history', icon: Clock },
-  // { name: 'Profile', path: '/profile', icon: Clock },
-];
-
 export const Navbar: React.FC<NavbarProps> = ({ showFullMenu = true }) => {
   const { user, logout } = useAuth();
   const [isOpen, setIsOpen] = useState(false);
   const [lastScroll, setLastScroll] = useState(0);
   const [hidden, setHidden] = useState(false);
+
+  // Add a type check for user's role or subscription status
+  const isPro = user && (user.role === 'pro' || user.role === 'admin');
+
+  // Update the NAV_LINKS array to conditionally include subscribe link
+  const NAV_LINKS = [
+    { name: 'Dashboard', path: '/dashboard', icon: Leaf },
+    { name: 'Detection', path: '/detect', icon: Camera },
+    { name: 'Docs', path: '/docs', icon: BookOpen },
+    { name: 'History', path: '/history', icon: Clock },
+    // Only show Subscribe link for non-pro users
+    ...(!isPro ? [{ name: 'Upgrade to Pro', path: '/subscribe', icon: Sparkles }] : []),
+  ];
 
   useEffect(() => {
     const handleScroll = () => {
@@ -141,6 +148,12 @@ export const Navbar: React.FC<NavbarProps> = ({ showFullMenu = true }) => {
                           <div className="p-4 bg-gradient-to-r from-green-50 to-emerald-50 border-b border-green-100">
                             <div className="text-sm font-medium text-green-800">
                               {user.firstName} {user.lastName}
+                              {isPro && (
+                                <Badge variant="outline" className="ml-2 bg-green-100 text-green-800">
+                                  <Sparkles className="w-3 h-3 mr-1" />
+                                  PRO
+                                </Badge>
+                              )}
                             </div>
                             <div className="text-xs text-green-600">{user.email}</div>
                           </div>
@@ -224,6 +237,12 @@ export const Navbar: React.FC<NavbarProps> = ({ showFullMenu = true }) => {
                     <div>
                       <div className="text-lg font-medium text-green-800">
                         {user.firstName} {user.lastName}
+                        {isPro && (
+                          <Badge variant="outline" className="ml-2 bg-green-100 text-green-800">
+                            <Sparkles className="w-3 h-3 mr-1" />
+                            PRO
+                          </Badge>
+                        )}
                       </div>
                       <div className="text-sm text-green-600">{user.email}</div>
                     </div>
