@@ -119,8 +119,8 @@ const Contact: React.FC = () => {
                                     <button
                                         onClick={() => setActiveForm('general')}
                                         className={`flex-1 py-2 text-sm md:text-base font-medium rounded-md transition-colors ${activeForm === 'general'
-                                                ? 'bg-white text-green-700 shadow-sm'
-                                                : 'text-gray-600 hover:text-green-600'
+                                            ? 'bg-white text-green-700 shadow-sm'
+                                            : 'text-gray-600 hover:text-green-600'
                                             }`}
                                     >
                                         General Inquiry
@@ -128,8 +128,8 @@ const Contact: React.FC = () => {
                                     <button
                                         onClick={() => setActiveForm('support')}
                                         className={`flex-1 py-2 text-sm md:text-base font-medium rounded-md transition-colors ${activeForm === 'support'
-                                                ? 'bg-white text-green-700 shadow-sm'
-                                                : 'text-gray-600 hover:text-green-600'
+                                            ? 'bg-white text-green-700 shadow-sm'
+                                            : 'text-gray-600 hover:text-green-600'
                                             }`}
                                     >
                                         Technical Support
@@ -296,7 +296,7 @@ const Contact: React.FC = () => {
                         {/* Right column: Contact Information */}
                         <motion.div variants={fadeInUp} className="space-y-6">
                             {/* Contact Info Card */}
-                            <Card className="p-6 md:p-8 shadow-xl rounded-xl bg-white border-t-4 border-green-500">
+                            <Card className="p-6 md:p-8 shadow-xl rounded-xl bg-white ">
                                 <h2 className="text-2xl font-bold text-green-800 mb-6">Contact Information</h2>
 
                                 <div className="space-y-6">
@@ -307,9 +307,9 @@ const Contact: React.FC = () => {
                                         <div>
                                             <h3 className="font-medium text-lg text-gray-800">Our Location</h3>
                                             <p className="text-gray-600 mt-1">
-                                                1234 Green Technology Park<br />
-                                                Suite 500<br />
-                                                San Francisco, CA 94107
+                                                804, Tulsi<br />
+                                                Opp Croma Store<br />
+                                                College Road Nadiad, 387001
                                             </p>
                                         </div>
                                     </div>
@@ -321,8 +321,8 @@ const Contact: React.FC = () => {
                                         <div>
                                             <h3 className="font-medium text-lg text-gray-800">Phone</h3>
                                             <p className="text-gray-600 mt-1">
-                                                Main: +1 (555) 123-4567<br />
-                                                Support: 1-800-PLANT-AI (752-6824)
+                                                Main: +91 8200528373<br />
+                                                Support: +91 90540 49655
                                             </p>
                                         </div>
                                     </div>
@@ -334,9 +334,9 @@ const Contact: React.FC = () => {
                                         <div>
                                             <h3 className="font-medium text-lg text-gray-800">Email</h3>
                                             <p className="text-gray-600 mt-1">
-                                                General: info@plantai.com<br />
-                                                Support: support@plantai.com<br />
-                                                Research: research@plantai.com
+                                                General: danishvhora786@leafcare.com<br />
+                                                Support: niharrakholiya@leafcare.com<br />
+                                                Research: 22ceubs037@leafcare.com
                                             </p>
                                         </div>
                                     </div>

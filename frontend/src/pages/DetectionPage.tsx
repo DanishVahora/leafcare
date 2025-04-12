@@ -41,6 +41,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import jsPDF from "jspdf";
 import { ShareDialog } from "@/components/ShareDialog";
+import { useDetection } from "@/context/DetectionContext";
 
 const fadeInUp = {
   hidden: { opacity: 0, y: 20 },
@@ -48,28 +49,45 @@ const fadeInUp = {
 };
 
 const DetectionPage: React.FC = () => {
-  const [imageSrc, setImageSrc] = useState<string | null>(null);
-  const [preprocessedImage, setPreprocessedImage] = useState<string | null>(null);
-  const [results, setResults] = useState<any>(null);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [url, setUrl] = useState("");
-  const [treatmentInfo, setTreatmentInfo] = useState<any>(null);
-  const [loadingTreatment, setLoadingTreatment] = useState(false);
-  const [treatmentError, setTreatmentError] = useState<string | null>(null);
-  const [isReading, setIsReading] = useState(false);
-  const speechSynthRef = useRef<SpeechSynthesisUtterance | null>(null);
-  // Add this state to track when a scan is in progress
-  const [scanInProgress, setScanInProgress] = useState(false);
-  const [copied, setCopied] = useState(false);
-  const [shareDialogOpen, setShareDialogOpen] = useState(false);
- 
-  // Access management
+  const {
+    state: {
+      imageSrc,
+      preprocessedImage,
+      results,
+      treatmentInfo,
+      url,
+      loading,
+      error,
+      loadingTreatment,
+      treatmentError,
+      isReading,
+      scanInProgress,
+      copied,
+      shareDialogOpen
+    },
+    setImageSrc,
+    setPreprocessedImage,
+    setResults,
+    setTreatmentInfo,
+    setUrl,
+    setLoading,
+    setError,
+    setLoadingTreatment,
+    setTreatmentError,
+    setIsReading,
+    setScanInProgress,
+    setCopied,
+    setShareDialogOpen,
+    resetState
+  } = useDetection();
+
+  // Keep your existing useAuth, useFeatureAccess hooks and other state
   const { isAuthenticated, user } = useAuth();
   const { checkFeatureAccess, canAccessFeature, usageCount, setUsageCount } = useFeatureAccess();
   const [accessGranted, setAccessGranted] = useState(true);
   const { trackUsage } = useSubscription();
   const [userScansRemaining, setUserScansRemaining] = useState<number | null>(null);
+  const speechSynthRef = useRef<SpeechSynthesisUtterance | null>(null);
 
   // Check initial access based on user state
   useEffect(() => {
@@ -198,12 +216,7 @@ const DetectionPage: React.FC = () => {
 
   // Add a reset function that can be called if needed
   const resetScan = () => {
-    setImageSrc(null);
-    setPreprocessedImage(null);
-    setResults(null);
-    setTreatmentInfo(null);
-    setError(null);
-    setScanInProgress(false);
+    resetState();
   };
 
   // Modify onDrop to use the new access check
@@ -473,9 +486,11 @@ Use straightforward language appropriate for farmers with basic education. Prior
   // Add this useEffect to handle cleanup
   React.useEffect(() => {
     return () => {
+      // Only cancel speech synthesis when unmounting
       if (speechSynthRef.current) {
         window.speechSynthesis.cancel();
       }
+      // Don't reset any other state here
     };
   }, []);
 
