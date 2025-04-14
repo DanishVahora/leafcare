@@ -897,6 +897,14 @@ View full report: ${window.location.href}`;
           <AlertCircle className="w-5 h-5" />
           {results.error}
         </div>
+      ) : results.prediction === "No_Plant" ? (
+        <div className="text-amber-600 flex items-center gap-2 p-6 bg-amber-50 rounded-xl">
+          <AlertCircle className="w-5 h-5" />
+          <div>
+            <h3 className="font-semibold">No Plant Detected</h3>
+            <p className="text-sm">Please upload a clear image of a plant leaf. Make sure the leaf is well-lit and centered in the frame.</p>
+          </div>
+        </div>
       ) : (
         <>
           <div className="text-center">

@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
+import { useAuth } from "@/context/AuthContext";
 
 interface DetectionState {
   imageSrc: string | null;
@@ -66,6 +67,8 @@ export const DetectionProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     };
   });
 
+  const { isAuthenticated } = useAuth();
+
   // Save state to localStorage whenever it changes
   useEffect(() => {
     try {
@@ -118,6 +121,13 @@ export const DetectionProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       }
     };
   }, [state.isReading]);
+
+  useEffect(() => {
+    // Reset state when logged out
+    if (!isAuthenticated) {
+      resetState();
+    }
+  }, [isAuthenticated]);
 
   return (
     <DetectionContext.Provider value={{
