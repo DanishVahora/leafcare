@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useRef, useEffect } from "react";
+import React, { useState, useRef } from "react";
 import { Layout } from "../Layout/Layout";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -19,12 +19,7 @@ import {
   Sparkles,
   Download,
   Share2,
-  FileText,
-  Printer,
-  Mail,
-  Copy,
-  Check,
-  MessageCircle 
+  
 } from "lucide-react";
 import { motion } from "framer-motion";
 import { useDropzone } from "react-dropzone";
@@ -33,15 +28,10 @@ import { useAuth } from "@/context/AuthContext";
 import { UpgradePrompt } from "@/components/UpgradePrompt";
 import { useSubscription } from "@/hooks/useSubscription";
 import { toast } from "sonner";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import jsPDF from "jspdf";
 import { ShareDialog } from "@/components/ShareDialog";
 import { useDetection } from "@/context/DetectionContext";
+import { useEffect, useCallback } from 'react';
 
 const fadeInUp = {
   hidden: { opacity: 0, y: 20 },
@@ -83,7 +73,7 @@ const DetectionPage: React.FC = () => {
 
   // Keep your existing useAuth, useFeatureAccess hooks and other state
   const { isAuthenticated, user } = useAuth();
-  const { checkFeatureAccess, canAccessFeature, usageCount, setUsageCount } = useFeatureAccess();
+  const { canAccessFeature, usageCount, setUsageCount } = useFeatureAccess();
   const [accessGranted, setAccessGranted] = useState(true);
   const { trackUsage } = useSubscription();
   const [userScansRemaining, setUserScansRemaining] = useState<number | null>(null);
@@ -226,6 +216,12 @@ const DetectionPage: React.FC = () => {
       return;
     }
     
+    // Reset detection context before processing new image
+    setResults(null);
+    setTreatmentInfo(null);
+    setError(null);
+    setTreatmentError(null);
+    
     const file = acceptedFiles[0];
     const reader = new FileReader();
     reader.onload = (e) => {
@@ -250,6 +246,12 @@ const DetectionPage: React.FC = () => {
     if (!canPerformNewScan()) {
       return;
     }
+
+    // Reset detection context before processing new image
+    setResults(null);
+    setTreatmentInfo(null);
+    setError(null);
+    setTreatmentError(null);
 
     try {
       const img = new window.Image();
@@ -729,6 +731,43 @@ View full report: ${window.location.href}`;
     const text = `I've detected ${results.prediction.replace(/_/g, ' ')} in my plant using LeafCare with ${(results.confidence * 100).toFixed(1)}% confidence. Check it out!`;
     window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
   };
+
+  // Add this new function
+  const handleBeforeUnload = useCallback((e: BeforeUnloadEvent) => {
+    if (imageSrc || results || treatmentInfo) {
+      e.preventDefault();
+      e.returnValue = '';
+      return '';
+    }
+  }, [imageSrc, results, treatmentInfo]);
+
+  // Add this new useEffect
+  useEffect(() => {
+    // Add the event listener
+    window.addEventListener('beforeunload', handleBeforeUnload);
+
+    // Cleanup function
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+    };
+  }, [handleBeforeUnload]);
+
+  // Also add React Router warning if you're using React Router
+  useEffect(() => {
+    const unloadCallback = (event: any) => {
+      if (imageSrc || results || treatmentInfo) {
+        event.preventDefault();
+        event.returnValue = '';
+        return '';
+      }
+    };
+
+    window.onbeforeunload = unloadCallback;
+
+    return () => {
+      window.onbeforeunload = null;
+    };
+  }, [imageSrc, results, treatmentInfo]);
 
   return (
     <Layout>
