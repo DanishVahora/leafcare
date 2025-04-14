@@ -8,7 +8,7 @@ import PublicRoute from './PublicRoute';
 import PlantAnalyze from '../pages/PlantAnalyzer';
 import DetectionPage from '@/pages/DetectionPage';
 import SubscribePro from '@/pages/SubscribePro';
-import {DocumentPage} from '@/pages/DocumentPage';
+import DocumentPage from '@/pages/DocumentPage';
 import { SubscriptionManager } from '@/components/SubscriptionManager';
 import HistoryPage from '@/pages/HistoryPage';
 import Privacy from '@/pages/Privacy';

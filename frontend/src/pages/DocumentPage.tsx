@@ -1,524 +1,641 @@
-import { BrainCircuit, Factory, LeafyGreen, Network, TestTube2, Wheat } from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Badge } from '@/components/ui/badge';
-import Layout from '../Layout/Layout';
-import { MotionDiv } from '../motion/MotionDiv';
-import AccuracyChart from './AccuracyChart';
-import LossChart from './LossChart';
-import CNNLayerStructure from './CNNLayerStructure';
-const fadeIn = {
-  initial: { opacity: 0, y: 20 },
-  animate: { opacity: 1, y: 0 },
+import React, { useEffect, useRef, useState } from "react";
+import { Layout } from "../Layout/Layout";
+import { Card } from "@/components/ui/card";
+import Chart from "chart.js/auto";
+import { 
+  Cpu,
+  Database,
+  BookOpen,
+  LineChart,
+  FileText,
+  ArrowRightLeft,
+  BrainCircuit,
+  Lightbulb,
+  TestTube2,
+  Activity,
+  Workflow,
+  Layers,
+  Check,
+  GitFork,
+  FileCode,
+  Sparkles
+} from "lucide-react";
+import { motion } from "framer-motion";
+import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+
+const fadeInUp = {
+  hidden: { opacity: 0, y: 20 },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.6 } },
 };
 
-export const DocumentPage = () => {
+const containerAnimation = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.1
+    }
+  }
+};
+
+const DocumentPage = () => {
+  const accuracyChartRef = useRef(null);
+  const lossChartRef = useRef(null);
+  const [activeTab, setActiveTab] = useState("architecture");
+
+  useEffect(() => {
+    // Accuracy Chart
+    if (accuracyChartRef.current) {
+      const accuracyChart = new Chart(accuracyChartRef.current, {
+        type: 'line',
+        data: {
+          labels: ['Epoch 1', 'Epoch 2', 'Epoch 3', 'Epoch 4'],
+          datasets: [
+            {
+              label: 'Training Accuracy',
+              data: [94.12, 99.05, 99.34, 99.58],
+              borderColor: 'rgb(34, 197, 94)',
+              backgroundColor: 'rgba(34, 197, 94, 0.2)',
+              tension: 0.4,
+              fill: true
+            },
+            {
+              label: 'Test Accuracy',
+              data: [93.48, 98.67, 98.89, 99.09],
+              borderColor: 'rgb(59, 130, 246)',
+              backgroundColor: 'rgba(59, 130, 246, 0.2)',
+              tension: 0.4,
+              fill: true
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          plugins: {
+            legend: {
+              position: 'top',
+            },
+            title: {
+              display: true,
+              text: 'Model Accuracy by Epoch',
+              font: {
+                size: 16
+              }
+            }
+          },
+          scales: {
+            y: {
+              min: 90,
+              max: 100,
+              title: {
+                display: true,
+                text: 'Accuracy (%)'
+              }
+            }
+          }
+        }
+      });
+
+      return () => {
+        accuracyChart.destroy();
+      };
+    }
+  }, [accuracyChartRef.current]);
+
+  useEffect(() => {
+    // Loss Chart
+    if (lossChartRef.current) {
+      const lossChart = new Chart(lossChartRef.current, {
+        type: 'line',
+        data: {
+          labels: ['Epoch 1', 'Epoch 2', 'Epoch 3', 'Epoch 4'],
+          datasets: [
+            {
+              label: 'Training Loss',
+              data: [0.5513, 0.0554, 0.0296, 0.0176],
+              borderColor: 'rgb(244, 63, 94)',
+              backgroundColor: 'rgba(244, 63, 94, 0.2)',
+              tension: 0.4,
+              fill: true
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          plugins: {
+            legend: {
+              position: 'top',
+            },
+            title: {
+              display: true,
+              text: 'Model Loss by Epoch',
+              font: {
+                size: 16
+              }
+            }
+          },
+          scales: {
+            y: {
+              title: {
+                display: true,
+                text: 'Loss'
+              }
+            }
+          }
+        }
+      });
+
+      return () => {
+        lossChart.destroy();
+      };
+    }
+  }, [lossChartRef.current]);
+
+  const renderSection = (title, icon, content) => (
+    <motion.div 
+      variants={fadeInUp}
+      className="mb-10"
+    >
+      <div className="flex items-center gap-3 mb-4">
+        <div className="p-2 rounded-lg bg-green-100 text-green-700">
+          {icon}
+        </div>
+        <h2 className="text-2xl font-bold text-green-800">{title}</h2>
+      </div>
+      {content}
+    </motion.div>
+  );
+
   return (
     <Layout>
-      <div className="bg-gradient-to-b from-gray-100 to-white transition-colors duration-700">
-        <div className="container mx-auto px-6 py-20">
-          {/* Page Header */}
-          <MotionDiv {...fadeIn} className="text-center mb-20">
-            <div className="inline-flex items-center gap-4 mb-6 transition-transform duration-500 hover:scale-110">
-              <div className="p-4 rounded-full bg-green-100 shadow-lg">
-                <LeafyGreen className="w-10 h-10 text-green-700" />
-              </div>
-              <h1 className="text-5xl font-extrabold text-gray-900 tracking-tight">
-                LeafCare AI - Technical Documentation
-              </h1>
-            </div>
-            <p className="text-xl text-gray-700 max-w-3xl mx-auto transition-colors duration-500">
-              Enterprise-grade plant disease detection system powered by advanced deep learning and computer vision.
+      <div className="container mx-auto px-6 py-10">
+        <motion.div
+          initial="hidden"
+          animate="visible"
+          variants={containerAnimation}
+          className="max-w-5xl mx-auto"
+        >
+          <motion.div variants={fadeInUp} className="mb-8 text-center">
+            <h1 className="text-4xl md:text-5xl font-bold text-green-800 mb-4 flex items-center justify-center gap-3">
+              <TestTube2 className="w-10 h-10" />
+              Plant Disease Detection
+              <Badge className="ml-2 bg-amber-100 text-amber-700 border-amber-200">
+                Documentation
+              </Badge>
+            </h1>
+            <p className="text-lg text-gray-600 max-w-3xl mx-auto">
+              A comprehensive documentation of our AI-powered plant disease detection system, 
+              showcasing the architecture, methodology, and workflow.
             </p>
-          </MotionDiv>
+          </motion.div>
 
-          {/* Overview Section */}
-          <section className="mb-20">
-            <MotionDiv {...fadeIn} className="mb-12">
-              <h2 className="text-3xl font-bold text-gray-800 mb-4">Overview</h2>
-              <hr className="border-gray-300 mb-8" />
-              <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
-                <Card className="bg-white bg-opacity-80 backdrop-blur-md shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:scale-105">
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-3">
-                      <Wheat className="w-7 h-7 text-green-600" />
-                      Problem Statement
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <p className="text-gray-600">
-                      Agricultural productivity faces significant threats from plant diseases, causing up to 40% crop loss annually.
-                      Manual detection is slow and requires expert knowledge, necessitating a scalable, automated solution.
-                    </p>
-                    <Badge variant="outline" className="mt-4 bg-green-100">Market Need</Badge>
-                  </CardContent>
-                </Card>
+          <Tabs defaultValue="architecture" className="mb-8" onValueChange={setActiveTab}>
+            <TabsList className="grid grid-cols-2 md:grid-cols-4 gap-2 bg-green-50 p-1 rounded-lg">
+              <TabsTrigger value="architecture" className="data-[state=active]:bg-green-600">
+                <Cpu className="w-4 h-4 mr-2" />
+                Architecture
+              </TabsTrigger>
+              <TabsTrigger value="training" className="data-[state=active]:bg-green-600">
+                <LineChart className="w-4 h-4 mr-2" />
+                Training
+              </TabsTrigger>
+              <TabsTrigger value="workflow" className="data-[state=active]:bg-green-600">
+                <Workflow className="w-4 h-4 mr-2" />
+                Workflow
+              </TabsTrigger>
+              <TabsTrigger value="features" className="data-[state=active]:bg-green-600">
+                <Sparkles className="w-4 h-4 mr-2" />
+                Features
+              </TabsTrigger>
+            </TabsList>
 
-                <Card className="bg-white bg-opacity-80 backdrop-blur-md shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:scale-105">
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-3">
-                      <BrainCircuit className="w-7 h-7 text-green-600" />
-                      Technical Approach
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <ul className="space-y-3 text-gray-600">
-                      <li>• Deep Convolutional Neural Networks (CNN)</li>
-                      <li>• Transfer Learning Optimization</li>
-                      <li>• Image Processing Pipeline</li>
-                      <li>• Cloud-based Scalability</li>
-                    </ul>
-                    <div className="mt-4 flex gap-2">
-                      <Badge variant="outline" className="bg-green-100">CNN</Badge>
-                      <Badge variant="outline" className="bg-green-100">TensorFlow</Badge>
-                    </div>
-                  </CardContent>
-                </Card>
-
-                <Card className="bg-white bg-opacity-80 backdrop-blur-md shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:scale-105">
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-3">
-                      <Factory className="w-7 h-7 text-green-600" />
-                      Industry Application
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-2">
-                      <h4 className="font-medium">Key Sectors:</h4>
-                      <ul className="list-disc pl-5 text-gray-600">
-                        <li>Precision Agriculture</li>
-                        <li>Agri-tech Platforms</li>
-                        <li>Research Institutions</li>
+            <TabsContent value="architecture" className="mt-6">
+              {renderSection(
+                "System Architecture",
+                <Layers className="w-6 h-6" />,
+                <Card className="p-6 shadow-lg">
+                  <div className="grid md:grid-cols-2 gap-6">
+                    <div>
+                      <h3 className="text-lg font-semibold mb-4 text-green-700">Architecture Overview</h3>
+                      <p className="text-gray-700 mb-4">
+                        Our plant disease detection system utilizes a Vision Transformer (ViT) 
+                        architecture fine-tuned on the PlantVillage dataset. The system consists of:
+                      </p>
+                      <ul className="space-y-2 pl-6 list-disc text-gray-700">
+                        <li>Frontend React application for user interaction</li>
+                        <li>Backend FastAPI server for image processing and inference</li>
+                        <li>ViT model with 12 transformer layers and 768 embedding dimensions</li>
+                        <li>Treatment recommendation engine powered by Gemini API</li>
                       </ul>
                     </div>
-                    <div className="mt-4 bg-green-50 p-3 rounded-lg transition-colors duration-300 hover:bg-green-100">
-                      <p className="text-sm text-green-700">
-                        Seamless integration with IoT devices and farm management systems.
-                      </p>
+                    <div className="bg-white p-4 rounded-lg border border-gray-200">
+                      <h4 className="font-medium text-center text-gray-800 mb-3">Model Architecture</h4>
+                      <div className="bg-gray-50 p-4 rounded-lg text-sm font-mono overflow-auto max-h-64">
+                        <pre className="text-xs">
+{`ViTForImageClassification(
+  (vit): ViTModel(
+    (embeddings): ViTEmbeddings(
+      (patch_embeddings): ViTPatchEmbeddings(
+        (projection): Conv2d(3, 768, kernel_size=(16, 16))
+      )
+    )
+    (encoder): ViTEncoder(
+      (layer): ModuleList(12 x ViTLayer)
+    )
+    (layernorm): LayerNorm((768))
+  )
+  (classifier): Linear(in=768, out=38)
+)`}
+                        </pre>
+                      </div>
                     </div>
-                  </CardContent>
+                  </div>
+                  
+                  <div className="mt-8">
+                    <h3 className="text-lg font-semibold mb-4 text-green-700">Data Pipeline</h3>
+                    <div className="relative">
+                      <div className="absolute left-4 inset-y-0 w-0.5 bg-green-200"></div>
+                      <div className="space-y-6 relative">
+                        {[
+                          {
+                            title: "Image Acquisition",
+                            description: "User uploads image via web interface or mobile camera",
+                            icon: <div className="w-8 h-8 rounded-full bg-green-600 flex items-center justify-center text-white">1</div>
+                          },
+                          {
+                            title: "Preprocessing",
+                            description: "Images are resized to 224x224 and normalized to match ViT input requirements",
+                            icon: <div className="w-8 h-8 rounded-full bg-green-600 flex items-center justify-center text-white">2</div>
+                          },
+                          {
+                            title: "Feature Extraction",
+                            description: "ViT splits image into 16x16 patches and processes through transformer layers",
+                            icon: <div className="w-8 h-8 rounded-full bg-green-600 flex items-center justify-center text-white">3</div>
+                          },
+                          {
+                            title: "Classification",
+                            description: "Output layer predicts one of 38 plant disease classes with confidence score",
+                            icon: <div className="w-8 h-8 rounded-full bg-green-600 flex items-center justify-center text-white">4</div>
+                          },
+                          {
+                            title: "Treatment Generation",
+                            description: "Disease prediction triggers Gemini API to generate targeted treatment recommendations",
+                            icon: <div className="w-8 h-8 rounded-full bg-green-600 flex items-center justify-center text-white">5</div>
+                          }
+                        ].map((step, index) => (
+                          <div key={index} className="flex items-start ml-4 pl-6">
+                            {step.icon}
+                            <div className="ml-4">
+                              <h4 className="font-semibold text-green-800">{step.title}</h4>
+                              <p className="text-gray-600">{step.description}</p>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
                 </Card>
-              </div>
-            </MotionDiv>
-            <MotionDiv {...fadeIn}>
-              <p className="text-gray-600 mb-4">
-                The PlantPath AI platform is the culmination of extensive research in computer vision and agricultural sciences.
-                Leveraging modern deep learning techniques, it diagnoses and predicts plant diseases to enable proactive measures that minimize economic losses.
-              </p>
-              <p className="text-gray-600">
-                Automating the detection process not only saves valuable time but also guarantees consistent results across various conditions.
-                Continuous model updates and feedback loops drive its evolution in addressing emerging disease patterns.
-              </p>
-            </MotionDiv>
-          </section>
+              )}
+            </TabsContent>
 
-          {/* Architecture & Data Pipeline Section */}
-          <section className="mb-20">
-            <MotionDiv {...fadeIn} className="mb-12">
-              <h2 className="text-3xl font-bold text-gray-800 mb-4">System Architecture</h2>
-              <hr className="border-gray-300 mb-8" />
-              <div className="grid gap-8 md:grid-cols-2">
-                <div>
-                  <h4 className="font-semibold mb-4 transition-all duration-300">Model Structure</h4>
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Layer Type</TableHead>
-                        <TableHead>Parameters</TableHead>
-                        <TableHead>Activation</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      <TableRow>
-                        <TableCell>Input Layer</TableCell>
-                        <TableCell>128x128x3</TableCell>
-                        <TableCell>-</TableCell>
-                      </TableRow>
-                      <TableRow>
-                        <TableCell>Conv2D x2</TableCell>
-                        <TableCell>32-512 filters</TableCell>
-                        <TableCell>ReLU</TableCell>
-                      </TableRow>
-                      <TableRow>
-                        <TableCell>Dense Layer</TableCell>
-                        <TableCell>1500 units</TableCell>
-                        <TableCell>ReLU</TableCell>
-                      </TableRow>
-                      <TableRow>
-                        <TableCell>Output Layer</TableCell>
-                        <TableCell>38 units</TableCell>
-                        <TableCell>Softmax</TableCell>
-                      </TableRow>
-                    </TableBody>
-                  </Table>
-                </div>
-                <div className="bg-white bg-opacity-80 backdrop-blur-md p-8 rounded-lg shadow-xl transition-all duration-300 hover:shadow-2xl">
-                  <h4 className="font-semibold mb-4 transition-all duration-300">Performance Metrics</h4>
-                  <div className="space-y-4">
+            <TabsContent value="training" className="mt-6">
+              {renderSection(
+                "Training Methodology",
+                <BrainCircuit className="w-6 h-6" />,
+                <Card className="p-6 shadow-lg">
+                  <div className="grid md:grid-cols-2 gap-8">
                     <div>
-                      <p className="text-sm text-gray-600">Training Accuracy</p>
-                      <div className="flex items-center gap-2">
-                        <div className="w-full bg-gray-200 rounded-full h-2.5">
-                          <div className="bg-green-600 h-2.5 rounded-full" style={{ width: '98.7%' }} />
+                      <h3 className="text-lg font-semibold mb-4 text-green-700">Dataset</h3>
+                      <div className="space-y-4">
+                        <div className="flex items-start gap-3">
+                          <Database className="w-5 h-5 text-green-600 mt-1" />
+                          <div>
+                            <p className="font-medium">PlantVillage Dataset</p>
+                            <p className="text-gray-600 text-sm">
+                              54,306 high-quality RGB images of healthy and diseased plant leaves across 38 classes
+                            </p>
+                          </div>
                         </div>
-                        <span className="text-green-600 font-medium">98.7%</span>
-                      </div>
-                    </div>
-                    <div>
-                      <p className="text-sm text-gray-600">Validation Accuracy</p>
-                      <div className="flex items-center gap-2">
-                        <div className="w-full bg-gray-200 rounded-full h-2.5">
-                          <div className="bg-green-600 h-2.5 rounded-full" style={{ width: '94.2%' }} />
+                        <div className="flex items-start gap-3">
+                          <GitFork className="w-5 h-5 text-green-600 mt-1" />
+                          <div>
+                            <p className="font-medium">Data Split</p>
+                            <p className="text-gray-600 text-sm">
+                              Train: 43,444 images (80%) | Test: 10,862 images (20%)
+                            </p>
+                          </div>
                         </div>
-                        <span className="text-green-600 font-medium">94.2%</span>
+                        <div className="flex items-start gap-3">
+                          <ArrowRightLeft className="w-5 h-5 text-green-600 mt-1" />
+                          <div>
+                            <p className="font-medium">Augmentation</p>
+                            <p className="text-gray-600 text-sm">
+                              Resize (224x224), normalization with mean=[0.5, 0.5, 0.5], std=[0.5, 0.5, 0.5]
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+
+                      <h3 className="text-lg font-semibold mb-4 mt-8 text-green-700">Training Details</h3>
+                      <div className="space-y-4">
+                        <div className="flex items-start gap-3">
+                          <FileCode className="w-5 h-5 text-green-600 mt-1" />
+                          <div>
+                            <p className="font-medium">Model Base</p>
+                            <p className="text-gray-600 text-sm">
+                              google/vit-base-patch16-224-in21k (pre-trained on ImageNet)
+                            </p>
+                          </div>
+                        </div>
+                        <div className="flex items-start gap-3">
+                          <Activity className="w-5 h-5 text-green-600 mt-1" />
+                          <div>
+                            <p className="font-medium">Hyperparameters</p>
+                            <p className="text-gray-600 text-sm">
+                              Optimizer: AdamW, Learning Rate: 5e-5, Batch Size: 32, Epochs: 4
+                            </p>
+                          </div>
+                        </div>
+                        <div className="flex items-start gap-3">
+                          <Check className="w-5 h-5 text-green-600 mt-1" />
+                          <div>
+                            <p className="font-medium">Final Results</p>
+                            <p className="text-gray-600 text-sm">
+                              Training Accuracy: 99.58% | Test Accuracy: 99.09%
+                            </p>
+                          </div>
+                        </div>
                       </div>
                     </div>
-                    <div className="mt-4 space-y-2">
-                      <Badge className="bg-green-100 text-green-700 transition-all duration-300">Inference Time: 120ms</Badge>
-                      <Badge className="bg-green-100 text-green-700 transition-all duration-300">Model Size: 65MB</Badge>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </MotionDiv>
-
-            {/* Training Progress Charts */}
-            <MotionDiv {...fadeIn} className="mb-12">
-              <h3 className="text-3xl font-bold text-gray-800 mb-4">Training Progress</h3>
-              <hr className="border-gray-300 mb-8" />
-              <div className="grid gap-8 md:grid-cols-2">
-                <AccuracyChart />
-                <LossChart />
-              </div>
-            </MotionDiv>
-            <MotionDiv {...fadeIn} className="mb-12">
-              <h3 className="text-3xl font-bold text-gray-800 mb-4">CNN </h3>
-              <hr className="border-gray-300 mb-8" />
-              <div className="grid gap-8 md:grid-cols-2">
-              <CNNLayerStructure/> 
-              </div>
-            </MotionDiv>
-            
-
-            <MotionDiv {...fadeIn}>
-              <h2 className="text-3xl font-bold text-gray-800 mb-4">Data Pipeline</h2>
-              <hr className="border-gray-300 mb-8" />
-              <div className="grid gap-8 md:grid-cols-2">
-                <div>
-                  <h4 className="font-semibold mb-4 transition-all duration-300">Dataset Structure</h4>
-                  <ul className="space-y-3 text-gray-600">
-                    <li>• 38 Plant Species</li>
-                    <li>• 87 Disease Classes</li>
-                    <li>• 150,000+ Images</li>
-                    <li>• 70-30 Train-Validation Split</li>
-                  </ul>
-                </div>
-                <div>
-                  <h4 className="font-semibold mb-4 transition-all duration-300">Preprocessing</h4>
-                  <div className="space-y-2">
-                    <div className="flex items-center gap-2">
-                      <Badge variant="outline" className="transition-all duration-300">
-                        Resize: 128x128
-                      </Badge>
-                      <Badge variant="outline" className="transition-all duration-300">
-                        Normalization
-                      </Badge>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <Badge variant="outline" className="transition-all duration-300">
-                        Augmentation
-                      </Badge>
-                      <Badge variant="outline" className="transition-all duration-300">
-                        Batch: 32
-                      </Badge>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </MotionDiv>
-          </section>
-
-          {/* Training Methodology Section */}
-          <section className="mb-20">
-            <MotionDiv {...fadeIn} className="mb-12">
-              <h2 className="text-3xl font-bold text-gray-800 mb-4">Training Methodology</h2>
-              <hr className="border-gray-300 mb-8" />
-              <div className="grid gap-8 md:grid-cols-2">
-                <Card className="bg-white bg-opacity-80 backdrop-blur-md shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:scale-105 p-8">
-                  <h3 className="text-2xl font-bold mb-6">Optimization Strategy</h3>
-                  <div className="space-y-4">
-                    <div>
-                      <h4 className="font-semibold mb-2 transition-all duration-300">Key Techniques</h4>
-                      <ul className="list-disc pl-5 text-gray-600">
-                        <li>Adam Optimizer (lr=0.0001)</li>
-                        <li>Categorical Cross-Entropy Loss</li>
-                        <li>Early Stopping</li>
-                        <li>L2 Regularization</li>
-                      </ul>
-                    </div>
-                    <div>
-                      <h4 className="font-semibold mb-2 transition-all duration-300">Hardware Stack</h4>
-                      <div className="flex flex-wrap gap-2">
-                        <Badge variant="outline" className="bg-green-100 transition-all duration-300">
-                          NVIDIA A100 GPUs
-                        </Badge>
-                        <Badge variant="outline" className="bg-green-100 transition-all duration-300">
-                          Distributed Training
-                        </Badge>
+                    
+                    <div className="space-y-8">
+                      <div>
+                        <h3 className="text-lg font-semibold mb-4 text-green-700">Training Progress</h3>
+                        <div className="bg-white rounded-lg p-3 shadow-sm mb-6">
+                          <canvas ref={accuracyChartRef}></canvas>
+                        </div>
+                        <div className="bg-white rounded-lg p-3 shadow-sm">
+                          <canvas ref={lossChartRef}></canvas>
+                        </div>
                       </div>
                     </div>
                   </div>
                 </Card>
+              )}
+            </TabsContent>
 
-                <Card className="bg-white bg-opacity-80 backdrop-blur-md shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:scale-105 p-8">
-                  <h3 className="text-2xl font-bold mb-6">Validation Results</h3>
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Metric</TableHead>
-                        <TableHead>Training</TableHead>
-                        <TableHead>Validation</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      <TableRow>
-                        <TableCell>Accuracy</TableCell>
-                        <TableCell>98.7%</TableCell>
-                        <TableCell>94.2%</TableCell>
-                      </TableRow>
-                      <TableRow>
-                        <TableCell>Precision</TableCell>
-                        <TableCell>97.8%</TableCell>
-                        <TableCell>93.1%</TableCell>
-                      </TableRow>
-                      <TableRow>
-                        <TableCell>Recall</TableCell>
-                        <TableCell>98.2%</TableCell>
-                        <TableCell>92.7%</TableCell>
-                      </TableRow>
-                    </TableBody>
-                  </Table>
+            <TabsContent value="workflow" className="mt-6">
+              {renderSection(
+                "Workflow Steps",
+                <Workflow className="w-6 h-6" />,
+                <Card className="p-6 shadow-lg">
+                  <div className="relative">
+                    <div className="absolute left-6 inset-y-0 w-1 bg-green-100 rounded-full"></div>
+                    <div className="space-y-12">
+                      {[
+                        {
+                          title: "Image Upload",
+                          description: "Users can upload plant leaf images through the web interface via drag-and-drop or URL input",
+                          details: [
+                            "Support for JPEG and PNG formats",
+                            "Optional cross-origin handling for remote images",
+                            "Built-in validation for image types"
+                          ]
+                        },
+                        {
+                          title: "Preprocessing",
+                          description: "The uploaded image undergoes preprocessing before being sent to the model",
+                          details: [
+                            "Resizing to 128x128 pixels for UI display",
+                            "Converting to RGB color space if needed",
+                            "Normalizing pixel values to float32 (0-1 range)"
+                          ]
+                        },
+                        {
+                          title: "Model Inference",
+                          description: "The preprocessed image is sent to the backend FastAPI server for inference",
+                          details: [
+                            "Image packaged into FormData for transmission",
+                            "API endpoint processes the image using the ViT model",
+                            "Model classifies the image into one of 38 disease categories"
+                          ]
+                        },
+                        {
+                          title: "Result Analysis",
+                          description: "The system displays prediction results with confidence scores",
+                          details: [
+                            "Top prediction highlighted with confidence percentage",
+                            "Alternative predictions shown for comparison",
+                            "Visual indication of confidence level"
+                          ]
+                        },
+                        {
+                          title: "Treatment Generation",
+                          description: "For identified diseases, the system generates comprehensive treatment information",
+                          details: [
+                            "Disease information and spreading mechanism",
+                            "Organic and chemical treatment options",
+                            "Prevention tips and recommended products",
+                            "Educational resources for further learning"
+                          ]
+                        },
+                        {
+                          title: "Result Sharing",
+                          description: "For Pro users, results can be saved and shared through various channels",
+                          details: [
+                            "PDF report generation with detailed findings",
+                            "Email sharing functionality",
+                            "WhatsApp integration for mobile sharing",
+                            "Clipboard copy for quick references"
+                          ]
+                        }
+                      ].map((step, index) => (
+                        <div key={index} className="relative pl-12">
+                          <div className="absolute left-0 top-0 w-12 h-12 rounded-full bg-green-600 text-white flex items-center justify-center font-bold text-lg">
+                            {index + 1}
+                          </div>
+                          <div>
+                            <h3 className="text-xl font-semibold text-green-800 mb-2">{step.title}</h3>
+                            <p className="text-gray-700 mb-4">{step.description}</p>
+                            <div className="bg-green-50 p-4 rounded-lg">
+                              <ul className="space-y-2">
+                                {step.details.map((detail, i) => (
+                                  <li key={i} className="flex items-start gap-2">
+                                    <span className="text-green-600 mt-1">•</span>
+                                    <span className="text-gray-600">{detail}</span>
+                                  </li>
+                                ))}
+                              </ul>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
                 </Card>
+              )}
+            </TabsContent>
+
+            <TabsContent value="features" className="mt-6">
+              {renderSection(
+                "Project Features & Use Cases",
+                <Lightbulb className="w-6 h-6" />,
+                <Card className="p-6 shadow-lg">
+                  <div className="grid md:grid-cols-2 gap-8">
+                    <div>
+                      <h3 className="text-lg font-semibold mb-4 text-green-700 flex items-center gap-2">
+                        <Sparkles className="w-5 h-5" />
+                        Key Features
+                      </h3>
+                      
+                      <div className="space-y-4">
+                        {[
+                          {
+                            title: "High Accuracy Disease Detection",
+                            description: "99.09% accuracy on test set covering 38 disease classes across multiple crops"
+                          },
+                          {
+                            title: "Multi-platform Accessibility",
+                            description: "Web-based interface adaptable to desktop and mobile devices"
+                          },
+                          {
+                            title: "Real-time Processing",
+                            description: "Quick analysis with minimal latency using optimized inference"
+                          },
+                          {
+                            title: "Comprehensive Treatment Guides",
+                            description: "Detailed treatment recommendations with organic and chemical options"
+                          },
+                          {
+                            title: "Multilingual Support",
+                            description: "Text-to-speech functionality with support for local languages"
+                          },
+                          {
+                            title: "Offline Capability",
+                            description: "Progressive web app functionality for limited connectivity areas"
+                          },
+                          {
+                            title: "Custom Reporting",
+                            description: "Exportable reports in PDF format with visual and textual information"
+                          }
+                        ].map((feature, index) => (
+                          <div key={index} className="bg-white p-4 rounded-lg shadow-sm hover:shadow-md transition-shadow border-l-4 border-green-500">
+                            <h4 className="font-medium text-green-800">{feature.title}</h4>
+                            <p className="text-gray-600 text-sm">{feature.description}</p>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                    
+                    <div>
+                      <h3 className="text-lg font-semibold mb-4 text-green-700 flex items-center gap-2">
+                        <BookOpen className="w-5 h-5" />
+                        Use Cases
+                      </h3>
+                      
+                      <div className="space-y-6">
+                        {[
+                          {
+                            title: "Small-scale Farmers",
+                            description: "Early disease detection without expert consultation, reducing crop loss and improving yield",
+                            icon: "🌾"
+                          },
+                          {
+                            title: "Agricultural Extension Workers",
+                            description: "Quick field diagnosis tool to serve multiple farmers efficiently in rural areas",
+                            icon: "👨‍🌾"
+                          },
+                          {
+                            title: "Agricultural Research",
+                            description: "Data collection and analysis for understanding disease patterns and developing better control measures",
+                            icon: "🔬"
+                          },
+                          {
+                            title: "Educational Institutions",
+                            description: "Teaching tool for agricultural students to learn about plant pathology and disease identification",
+                            icon: "🎓"
+                          },
+                          {
+                            title: "Home Gardeners",
+                            description: "Hobby gardeners can identify and treat common plant diseases in home gardens",
+                            icon: "🪴"
+                          }
+                        ].map((useCase, index) => (
+                          <div key={index} className="flex gap-4">
+                            <div className="w-12 h-12 flex-shrink-0 bg-green-100 rounded-full flex items-center justify-center text-2xl">
+                              {useCase.icon}
+                            </div>
+                            <div>
+                              <h4 className="font-medium text-green-800">{useCase.title}</h4>
+                              <p className="text-gray-600">{useCase.description}</p>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                      
+                      <div className="mt-8 p-4 bg-amber-50 rounded-lg border border-amber-200">
+                        <h4 className="font-semibold text-amber-800 mb-2 flex items-center gap-2">
+                          <FileText className="w-4 h-4" />
+                          Impact Assessment
+                        </h4>
+                        <p className="text-amber-700 text-sm">
+                          Our system has the potential to reduce crop losses by up to 25% through early detection and timely intervention, 
+                          directly impacting food security and farmer livelihoods in developing regions.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </Card>
+              )}
+            </TabsContent>
+          </Tabs>
+
+          <motion.div variants={fadeInUp} className="mt-12 p-6 bg-green-50 rounded-lg border border-green-200">
+            <h2 className="text-xl font-bold text-green-800 mb-4 flex items-center gap-2">
+              <TestTube2 className="w-5 h-5" />
+              Technical Specifications
+            </h2>
+            <div className="grid md:grid-cols-3 gap-6">
+              <div className="bg-white p-4 rounded-lg shadow-sm">
+                <h3 className="font-medium text-green-700 mb-2">Frontend</h3>
+                <ul className="space-y-1 text-sm text-gray-600">
+                  <li>• React with TypeScript</li>
+                  <li>• Framer Motion for animations</li>
+                  <li>• Chart.js for data visualization</li>
+                  <li>• Tailwind CSS for styling</li>
+                </ul>
               </div>
-            </MotionDiv>
-          </section>
-
-          {/* Project Features, Use Cases & Workflow Section */}
-          <section className="mb-20">
-            <MotionDiv {...fadeIn} className="mb-12">
-              <h2 className="text-3xl font-bold text-gray-800 mb-4">Project Features & Use Cases</h2>
-              <hr className="border-gray-300 mb-8" />
-              <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
-                <Card className="bg-white bg-opacity-80 backdrop-blur-md shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:scale-105">
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-3">
-                      <BrainCircuit className="w-7 h-7 text-green-600" />
-                      Automated Model Updates
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <p className="text-gray-600">
-                      Seamlessly integrate new training data to continuously enhance detection accuracy.
-                    </p>
-                  </CardContent>
-                </Card>
-
-                <Card className="bg-white bg-opacity-80 backdrop-blur-md shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:scale-105">
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-3">
-                      <Factory className="w-7 h-7 text-green-600" />
-                      Scalable Deployment
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <p className="text-gray-600">
-                      Deploy across cloud infrastructures and IoT devices for real-time monitoring.
-                    </p>
-                  </CardContent>
-                </Card>
-
-                <Card className="bg-white bg-opacity-80 backdrop-blur-md shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:scale-105">
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-3">
-                      <TestTube2 className="w-7 h-7 text-green-600" />
-                      Real-Time Feedback Loop
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <p className="text-gray-600">
-                      Integrate with farm management systems to deliver instant insights and proactive alerts.
-                    </p>
-                  </CardContent>
-                </Card>
-
-                <Card className="bg-white bg-opacity-80 backdrop-blur-md shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:scale-105">
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-3">
-                      <Wheat className="w-7 h-7 text-green-600" />
-                      Precision Farming
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <p className="text-gray-600">
-                      Empower farmers with timely disease detection, predictive analytics, and custom treatment plans.
-                    </p>
-                  </CardContent>
-                </Card>
-
-                <Card className="bg-white bg-opacity-80 backdrop-blur-md shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:scale-105">
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-3">
-                      <LeafyGreen className="w-7 h-7 text-green-600" />
-                      Crop Insurance & Risk Management
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <p className="text-gray-600">
-                      Leverage insights for efficient claims processing, risk assessment, and tailored insurance products.
-                    </p>
-                  </CardContent>
-                </Card>
-
-                <Card className="bg-white bg-opacity-80 backdrop-blur-md shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:scale-105">
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-3">
-                      <Network className="w-7 h-7 text-green-600" />
-                      Research & Development
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <p className="text-gray-600">
-                      Support academic and industrial research with a robust dataset and state-of-the-art architecture.
-                    </p>
-                  </CardContent>
-                </Card>
+              <div className="bg-white p-4 rounded-lg shadow-sm">
+                <h3 className="font-medium text-green-700 mb-2">Backend</h3>
+                <ul className="space-y-1 text-sm text-gray-600">
+                  <li>• FastAPI for REST endpoints</li>
+                  <li>• PyTorch for model inference</li>
+                  <li>• Gemini API integration</li>
+                  <li>• Docker containerization</li>
+                </ul>
               </div>
-            </MotionDiv>
-
-            <MotionDiv {...fadeIn} className="mb-12">
-              <h3 className="text-3xl font-bold text-gray-800 mb-4">Workflow Steps</h3>
-              <hr className="border-gray-300 mb-8" />
-              <p className="text-gray-600 mb-4">
-                Follow these streamlined steps to transform raw data into actionable insights:
-              </p>
-              <div className="flex space-x-6 overflow-x-auto py-4">
-                {/* Step 1 */}
-                <div className="min-w-[250px] flex-shrink-0 transition-transform duration-300 hover:scale-105">
-                  <Card className="p-6 bg-white bg-opacity-80 backdrop-blur-md shadow-xl">
-                    <CardHeader>
-                      <CardTitle className="flex items-center gap-3">
-                        <Badge className="bg-green-100 text-green-700">Step 1</Badge>
-                        Data Collection
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <p className="text-gray-600">
-                        Gather extensive image datasets from farms, satellites, and IoT sensors.
-                      </p>
-                    </CardContent>
-                  </Card>
-                </div>
-                {/* Step 2 */}
-                <div className="min-w-[250px] flex-shrink-0 transition-transform duration-300 hover:scale-105">
-                  <Card className="p-6 bg-white bg-opacity-80 backdrop-blur-md shadow-xl">
-                    <CardHeader>
-                      <CardTitle className="flex items-center gap-3">
-                        <Badge className="bg-green-100 text-green-700">Step 2</Badge>
-                        Preprocessing
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <p className="text-gray-600">
-                        Clean, resize, and augment images to ensure optimal model ingestion.
-                      </p>
-                    </CardContent>
-                  </Card>
-                </div>
-                {/* Step 3 */}
-                <div className="min-w-[250px] flex-shrink-0 transition-transform duration-300 hover:scale-105">
-                  <Card className="p-6 bg-white bg-opacity-80 backdrop-blur-md shadow-xl">
-                    <CardHeader>
-                      <CardTitle className="flex items-center gap-3">
-                        <Badge className="bg-green-100 text-green-700">Step 3</Badge>
-                        Model Training
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <p className="text-gray-600">
-                        Train the CNN using transfer learning for exceptional accuracy and robustness.
-                      </p>
-                    </CardContent>
-                  </Card>
-                </div>
-                {/* Step 4 */}
-                <div className="min-w-[250px] flex-shrink-0 transition-transform duration-300 hover:scale-105">
-                  <Card className="p-6 bg-white bg-opacity-80 backdrop-blur-md shadow-xl">
-                    <CardHeader>
-                      <CardTitle className="flex items-center gap-3">
-                        <Badge className="bg-green-100 text-green-700">Step 4</Badge>
-                        Deployment
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <p className="text-gray-600">
-                        Deploy the model to cloud and edge infrastructures for scalable, real-time inference.
-                      </p>
-                    </CardContent>
-                  </Card>
-                </div>
-                {/* Step 5 */}
-                <div className="min-w-[250px] flex-shrink-0 transition-transform duration-300 hover:scale-105">
-                  <Card className="p-6 bg-white bg-opacity-80 backdrop-blur-md shadow-xl">
-                    <CardHeader>
-                      <CardTitle className="flex items-center gap-3">
-                        <Badge className="bg-green-100 text-green-700">Step 5</Badge>
-                        Monitoring & Feedback
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <p className="text-gray-600">
-                        Continuously monitor performance and incorporate feedback for ongoing enhancements.
-                      </p>
-                    </CardContent>
-                  </Card>
-                </div>
-                {/* Step 6 */}
-                <div className="min-w-[250px] flex-shrink-0 transition-transform duration-300 hover:scale-105">
-                  <Card className="p-6 bg-white bg-opacity-80 backdrop-blur-md shadow-xl">
-                    <CardHeader>
-                      <CardTitle className="flex items-center gap-3">
-                        <Badge className="bg-green-100 text-green-700">Step 6</Badge>
-                        Iterative Improvement
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <p className="text-gray-600">
-                        Regularly update the system based on new data, research insights, and evolving conditions.
-                      </p>
-                    </CardContent>
-                  </Card>
-                </div>
+              <div className="bg-white p-4 rounded-lg shadow-sm">
+                <h3 className="font-medium text-green-700 mb-2">Model</h3>
+                <ul className="space-y-1 text-sm text-gray-600">
+                  <li>• Vision Transformer (ViT) architecture</li>
+                  <li>• 86M parameters</li>
+                  <li>• 38 disease classes</li>
+                  <li>• SafeTensors format (304MB)</li>
+                </ul>
               </div>
-            </MotionDiv>
-          </section>
-
-          {/* In-Depth Analysis & Future Roadmap Section */}
-          <section className="mb-20">
-            <MotionDiv {...fadeIn}>
-              <h2 className="text-3xl font-bold text-gray-800 mb-4">In-Depth Analysis & Future Roadmap</h2>
-              <hr className="border-gray-300 mb-8" />
-              <p className="text-gray-600 mb-6">
-                The PlantPath AI platform is engineered to evolve continuously, adapting to emerging agricultural challenges.
-                Future enhancements include integrating advanced analytics, bolstering security, and forging strategic partnerships with global agri-tech leaders.
-              </p>
-              <p className="text-gray-600">
-                Its modular design allows independent updates for each component—from data ingestion and preprocessing to model training and real-time deployment—ensuring flexibility and scalability.
-                Collaboration with research institutions and user feedback will further propel innovations in AI-driven agriculture.
-              </p>
-            </MotionDiv>
-          </section>
-        </div>
+            </div>
+          </motion.div>
+          
+          <motion.div variants={fadeInUp} className="text-center mt-12">
+            <p className="text-gray-600">
+              © 2025 Plant Disease Detection Project | Documentation Version 1.0
+            </p>
+          </motion.div>
+        </motion.div>
       </div>
     </Layout>
   );
 };
+
+export default DocumentPage;
