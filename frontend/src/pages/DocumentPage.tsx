@@ -169,7 +169,7 @@ const DocumentPage = () => {
 
   return (
     <Layout>
-      <div className="container mx-auto px-6 py-10">
+      <div className="container mx-auto px-4 sm:px-6 py-6 sm:py-10">
         <motion.div
           initial="hidden"
           animate="visible"
@@ -177,14 +177,14 @@ const DocumentPage = () => {
           className="max-w-5xl mx-auto"
         >
           <motion.div variants={fadeInUp} className="mb-8 text-center">
-            <h1 className="text-4xl md:text-5xl font-bold text-green-800 mb-4 flex items-center justify-center gap-3">
-              <TestTube2 className="w-10 h-10" />
-              Plant Disease Detection
+            <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold text-green-800 mb-4 flex flex-wrap items-center justify-center gap-3">
+              <TestTube2 className="w-8 h-8 sm:w-10 sm:h-10" />
+              <span>Plant Disease Detection</span>
               <Badge className="ml-2 bg-amber-100 text-amber-700 border-amber-200">
                 Documentation
               </Badge>
             </h1>
-            <p className="text-lg text-gray-600 max-w-3xl mx-auto">
+            <p className="text-base sm:text-lg text-gray-600 max-w-3xl mx-auto px-4">
               A comprehensive documentation of our AI-powered plant disease detection system, 
               showcasing the architecture, methodology, and workflow.
             </p>
@@ -215,7 +215,7 @@ const DocumentPage = () => {
                 "System Architecture",
                 <Layers className="w-6 h-6" />,
                 <Card className="p-6 shadow-lg">
-                  <div className="grid md:grid-cols-2 gap-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
                       <h3 className="text-lg font-semibold mb-4 text-green-700">Architecture Overview</h3>
                       <p className="text-gray-700 mb-4">
@@ -229,10 +229,10 @@ const DocumentPage = () => {
                         <li>Treatment recommendation engine powered by Gemini API</li>
                       </ul>
                     </div>
-                    <div className="bg-white p-4 rounded-lg border border-gray-200">
+                    <div className="bg-white p-2 sm:p-4 rounded-lg border border-gray-200">
                       <h4 className="font-medium text-center text-gray-800 mb-3">Model Architecture</h4>
-                      <div className="bg-gray-50 p-4 rounded-lg text-sm font-mono overflow-auto max-h-64">
-                        <pre className="text-xs">
+                      <div className="bg-gray-50 p-2 sm:p-4 rounded-lg text-sm font-mono overflow-x-auto max-h-64">
+                        <pre className="text-xs whitespace-pre-wrap sm:whitespace-pre">
 {`ViTForImageClassification(
   (vit): ViTModel(
     (embeddings): ViTEmbeddings(
@@ -304,7 +304,7 @@ const DocumentPage = () => {
                 "Training Methodology",
                 <BrainCircuit className="w-6 h-6" />,
                 <Card className="p-6 shadow-lg">
-                  <div className="grid md:grid-cols-2 gap-8">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                     <div>
                       <h3 className="text-lg font-semibold mb-4 text-green-700">Dataset</h3>
                       <div className="space-y-4">
@@ -369,13 +369,13 @@ const DocumentPage = () => {
                       </div>
                     </div>
                     
-                    <div className="space-y-8">
+                    <div className="space-y-6">
                       <div>
                         <h3 className="text-lg font-semibold mb-4 text-green-700">Training Progress</h3>
-                        <div className="bg-white rounded-lg p-3 shadow-sm mb-6">
+                        <div className="bg-white rounded-lg p-2 sm:p-3 shadow-sm mb-6 overflow-x-auto">
                           <canvas ref={accuracyChartRef}></canvas>
                         </div>
-                        <div className="bg-white rounded-lg p-3 shadow-sm">
+                        <div className="bg-white rounded-lg p-2 sm:p-3 shadow-sm overflow-x-auto">
                           <canvas ref={lossChartRef}></canvas>
                         </div>
                       </div>
@@ -451,14 +451,14 @@ const DocumentPage = () => {
                           ]
                         }
                       ].map((step, index) => (
-                        <div key={index} className="relative pl-12">
-                          <div className="absolute left-0 top-0 w-12 h-12 rounded-full bg-green-600 text-white flex items-center justify-center font-bold text-lg">
+                        <div key={index} className="relative pl-8 sm:pl-12">
+                          <div className="absolute left-0 top-0 w-8 h-8 sm:w-12 sm:h-12 rounded-full bg-green-600 text-white flex items-center justify-center font-bold text-base sm:text-lg">
                             {index + 1}
                           </div>
                           <div>
-                            <h3 className="text-xl font-semibold text-green-800 mb-2">{step.title}</h3>
-                            <p className="text-gray-700 mb-4">{step.description}</p>
-                            <div className="bg-green-50 p-4 rounded-lg">
+                            <h3 className="text-lg sm:text-xl font-semibold text-green-800 mb-2">{step.title}</h3>
+                            <p className="text-sm sm:text-base text-gray-700 mb-4">{step.description}</p>
+                            <div className="bg-green-50 p-3 sm:p-4 rounded-lg">
                               <ul className="space-y-2">
                                 {step.details.map((detail, i) => (
                                   <li key={i} className="flex items-start gap-2">
@@ -562,8 +562,8 @@ const DocumentPage = () => {
                             icon: "🪴"
                           }
                         ].map((useCase, index) => (
-                          <div key={index} className="flex gap-4">
-                            <div className="w-12 h-12 flex-shrink-0 bg-green-100 rounded-full flex items-center justify-center text-2xl">
+                          <div key={index} className="flex flex-col sm:flex-row gap-3 sm:gap-4">
+                            <div className="w-10 h-10 sm:w-12 sm:h-12 flex-shrink-0 bg-green-100 rounded-full flex items-center justify-center text-xl sm:text-2xl">
                               {useCase.icon}
                             </div>
                             <div>
@@ -596,7 +596,7 @@ const DocumentPage = () => {
               <TestTube2 className="w-5 h-5" />
               Technical Specifications
             </h2>
-            <div className="grid md:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6">
               <div className="bg-white p-4 rounded-lg shadow-sm">
                 <h3 className="font-medium text-green-700 mb-2">Frontend</h3>
                 <ul className="space-y-1 text-sm text-gray-600">
