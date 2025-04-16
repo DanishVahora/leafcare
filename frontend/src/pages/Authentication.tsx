@@ -121,7 +121,7 @@ const Authentication = () => {
                 theme="outline"
                 size="large"
                 width="300" // Specify explicit width
-                height="50" // Specify explicit height
+                // height="50" // Specify explicit height
                 type="standard"
                 shape="rectangular"
               />

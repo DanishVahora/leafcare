@@ -4,17 +4,21 @@ import { AuthProvider } from './context/AuthContext';
 import AppRoute from './Routes/AppRoute'; 
 import { googleOAuthConfig } from './config/oauthConfig';
 import { DetectionProvider } from './context/DetectionContext';
+import { ScrollProvider } from './components/ScrollProvider'
+
 function App() {
   return (
-    <AuthProvider>
-      <DetectionProvider>
-        <BrowserRouter>
-          <GoogleOAuthProvider clientId={googleOAuthConfig.googleClientId}>
-            <AppRoute />
-          </GoogleOAuthProvider>
-        </BrowserRouter>
-      </DetectionProvider>
-    </AuthProvider>
+    <ScrollProvider>
+      <AuthProvider>
+        <DetectionProvider>
+          <BrowserRouter>
+            <GoogleOAuthProvider clientId={googleOAuthConfig.googleClientId}>
+              <AppRoute />
+            </GoogleOAuthProvider>
+          </BrowserRouter>
+        </DetectionProvider>
+      </AuthProvider>
+    </ScrollProvider>
   );
 }
 

@@ -24,12 +24,13 @@ import {
   TabsTrigger,
 } from "@/components/ui/tabs";
 import landingImg from '../assets/landing-img.jpeg';
+// import { useScroll } from "@studio-freight/react-lenis";
+import Lenis from "@studio-freight/lenis";
 
 const HomePage: React.FC = () => {
   const navigate = useNavigate();
   const [scrollProgress, setScrollProgress] = useState(0);
   const [isAboutExpanded, setIsAboutExpanded] = useState(false);
-  const [isTrainingExpanded, setIsTrainingExpanded] = useState(false);
   const [isUseExpanded, setIsUseExpanded] = useState(false);
   const [isPlanExpanded, setIsPlanExpanded] = useState(false);
   const [isSubscribed, setIsSubscribed] = useState(false);
@@ -48,7 +49,11 @@ const HomePage: React.FC = () => {
 
   const scrollToSection = (ref: React.RefObject<HTMLDivElement>) => {
     if (ref.current) {
-      ref.current.scrollIntoView({ behavior: 'smooth' });
+      const lenis = new Lenis()
+      lenis.scrollTo(ref.current, {
+        offset: -100,
+        duration: 1.5,
+      })
     }
   };
 
