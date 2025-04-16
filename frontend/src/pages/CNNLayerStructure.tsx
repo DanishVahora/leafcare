@@ -1,4 +1,3 @@
-import React from 'react';
 
 const CNNLayerStructure = () => {
   const layers = [
@@ -24,13 +23,13 @@ const CNNLayerStructure = () => {
     { name: "dense_1", type: "Dense", outputShape: [38], params: 57038, level: 7 }
   ];
 
-interface Layer {
-    name: string;
-    type: string;
-    outputShape: number[] | number;
-    params: number;
-    level: number;
-}
+// interface Layer {
+//     name: string;
+//     type: string;
+//     outputShape: number[] | number;
+//     params: number;
+//     level: number;
+// }
 
 const getLayerColor = (type: string): string => {
     const colors: { [key: string]: string } = {
@@ -43,15 +42,15 @@ const getLayerColor = (type: string): string => {
     return colors[type] || "#94a3b8";
 };
 
-  const logScale = (value) => (value > 0 ? Math.log10(value) * 15 : 0);
+  const logScale = (value: number): number => (value > 0 ? Math.log10(value) * 15 : 0);
 
-  const formatParams = (params) => {
+  const formatParams = (params: number): string => {
     if (params >= 1000000) {
       return `${(params / 1000000).toFixed(1)}M`;
     } else if (params >= 1000) {
       return `${(params / 1000).toFixed(1)}K`;
     }
-    return params;
+    return params.toString();
   };
 
   return (

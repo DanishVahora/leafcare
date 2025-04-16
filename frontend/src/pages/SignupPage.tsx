@@ -155,7 +155,7 @@ export default function SignupPage() {
   };
 
   return (
-    <Layout showFullMenu={false}>
+    <Layout >
       {/* Main Content */}
       <div className="flex-1 flex items-center justify-center px-6 py-12">
         <Card className="w-full max-w-md">
@@ -291,11 +291,11 @@ export default function SignupPage() {
                 />
                 <label htmlFor="terms" className="text-sm text-gray-600">
                   I agree to the{' '}
-                  <a href="#" className="text-green-600 hover:text-green-500">
+                  <a href="/terms" className="text-green-600 hover:text-green-500">
                     Terms of Service
                   </a>
                   {' '}and{' '}
-                  <a href="#" className="text-green-600 hover:text-green-500">
+                  <a href="/privacy" className="text-green-600 hover:text-green-500">
                     Privacy Policy
                   </a>
                 </label>

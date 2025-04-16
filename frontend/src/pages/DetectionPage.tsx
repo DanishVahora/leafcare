@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useRef, useEffect } from "react";
+import React, { useState, useRef } from "react";
 import { Layout } from "../Layout/Layout";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -19,12 +19,7 @@ import {
   Sparkles,
   Download,
   Share2,
-  FileText,
-  Printer,
-  Mail,
-  Copy,
-  Check,
-  MessageCircle 
+  
 } from "lucide-react";
 import { motion } from "framer-motion";
 import { useDropzone } from "react-dropzone";
@@ -33,14 +28,10 @@ import { useAuth } from "@/context/AuthContext";
 import { UpgradePrompt } from "@/components/UpgradePrompt";
 import { useSubscription } from "@/hooks/useSubscription";
 import { toast } from "sonner";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import jsPDF from "jspdf";
 import { ShareDialog } from "@/components/ShareDialog";
+import { useDetection } from "@/context/DetectionContext";
+import { useEffect, useCallback } from 'react';
 
 const fadeInUp = {
   hidden: { opacity: 0, y: 20 },
@@ -48,28 +39,45 @@ const fadeInUp = {
 };
 
 const DetectionPage: React.FC = () => {
-  const [imageSrc, setImageSrc] = useState<string | null>(null);
-  const [preprocessedImage, setPreprocessedImage] = useState<string | null>(null);
-  const [results, setResults] = useState<any>(null);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [url, setUrl] = useState("");
-  const [treatmentInfo, setTreatmentInfo] = useState<any>(null);
-  const [loadingTreatment, setLoadingTreatment] = useState(false);
-  const [treatmentError, setTreatmentError] = useState<string | null>(null);
-  const [isReading, setIsReading] = useState(false);
-  const speechSynthRef = useRef<SpeechSynthesisUtterance | null>(null);
-  // Add this state to track when a scan is in progress
-  const [scanInProgress, setScanInProgress] = useState(false);
-  const [copied, setCopied] = useState(false);
-  const [shareDialogOpen, setShareDialogOpen] = useState(false);
- 
-  // Access management
+  const {
+    state: {
+      imageSrc,
+      preprocessedImage,
+      results,
+      treatmentInfo,
+      url,
+      loading,
+      error,
+      loadingTreatment,
+      treatmentError,
+      isReading,
+      scanInProgress,
+      copied,
+      shareDialogOpen
+    },
+    setImageSrc,
+    setPreprocessedImage,
+    setResults,
+    setTreatmentInfo,
+    setUrl,
+    setLoading,
+    setError,
+    setLoadingTreatment,
+    setTreatmentError,
+    setIsReading,
+    setScanInProgress,
+    setCopied,
+    setShareDialogOpen,
+    resetState
+  } = useDetection();
+
+  // Keep your existing useAuth, useFeatureAccess hooks and other state
   const { isAuthenticated, user } = useAuth();
-  const { checkFeatureAccess, canAccessFeature, usageCount, setUsageCount } = useFeatureAccess();
+  const { canAccessFeature, usageCount, setUsageCount } = useFeatureAccess();
   const [accessGranted, setAccessGranted] = useState(true);
   const { trackUsage } = useSubscription();
   const [userScansRemaining, setUserScansRemaining] = useState<number | null>(null);
+  const speechSynthRef = useRef<SpeechSynthesisUtterance | null>(null);
 
   // Check initial access based on user state
   useEffect(() => {
@@ -198,12 +206,7 @@ const DetectionPage: React.FC = () => {
 
   // Add a reset function that can be called if needed
   const resetScan = () => {
-    setImageSrc(null);
-    setPreprocessedImage(null);
-    setResults(null);
-    setTreatmentInfo(null);
-    setError(null);
-    setScanInProgress(false);
+    resetState();
   };
 
   // Modify onDrop to use the new access check
@@ -212,6 +215,12 @@ const DetectionPage: React.FC = () => {
     if (!canPerformNewScan()) {
       return;
     }
+    
+    // Reset detection context before processing new image
+    setResults(null);
+    setTreatmentInfo(null);
+    setError(null);
+    setTreatmentError(null);
     
     const file = acceptedFiles[0];
     const reader = new FileReader();
@@ -237,6 +246,12 @@ const DetectionPage: React.FC = () => {
     if (!canPerformNewScan()) {
       return;
     }
+
+    // Reset detection context before processing new image
+    setResults(null);
+    setTreatmentInfo(null);
+    setError(null);
+    setTreatmentError(null);
 
     try {
       const img = new window.Image();
@@ -473,9 +488,11 @@ Use straightforward language appropriate for farmers with basic education. Prior
   // Add this useEffect to handle cleanup
   React.useEffect(() => {
     return () => {
+      // Only cancel speech synthesis when unmounting
       if (speechSynthRef.current) {
         window.speechSynthesis.cancel();
       }
+      // Don't reset any other state here
     };
   }, []);
 
@@ -715,6 +732,43 @@ View full report: ${window.location.href}`;
     window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
   };
 
+  // Add this new function
+  const handleBeforeUnload = useCallback((e: BeforeUnloadEvent) => {
+    if (imageSrc || results || treatmentInfo) {
+      e.preventDefault();
+      e.returnValue = '';
+      return '';
+    }
+  }, [imageSrc, results, treatmentInfo]);
+
+  // Add this new useEffect
+  useEffect(() => {
+    // Add the event listener
+    window.addEventListener('beforeunload', handleBeforeUnload);
+
+    // Cleanup function
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+    };
+  }, [handleBeforeUnload]);
+
+  // Also add React Router warning if you're using React Router
+  useEffect(() => {
+    const unloadCallback = (event: any) => {
+      if (imageSrc || results || treatmentInfo) {
+        event.preventDefault();
+        event.returnValue = '';
+        return '';
+      }
+    };
+
+    window.onbeforeunload = unloadCallback;
+
+    return () => {
+      window.onbeforeunload = null;
+    };
+  }, [imageSrc, results, treatmentInfo]);
+
   return (
     <Layout>
       <div className="container mx-auto px-6 py-8">
@@ -881,6 +935,14 @@ View full report: ${window.location.href}`;
         <div className="text-red-600 flex items-center gap-2">
           <AlertCircle className="w-5 h-5" />
           {results.error}
+        </div>
+      ) : results.prediction === "No_Plant" ? (
+        <div className="text-amber-600 flex items-center gap-2 p-6 bg-amber-50 rounded-xl">
+          <AlertCircle className="w-5 h-5" />
+          <div>
+            <h3 className="font-semibold">No Plant Detected</h3>
+            <p className="text-sm">Please upload a clear image of a plant leaf. Make sure the leaf is well-lit and centered in the frame.</p>
+          </div>
         </div>
       ) : (
         <>

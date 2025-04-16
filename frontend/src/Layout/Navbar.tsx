@@ -35,7 +35,7 @@ export const Navbar: React.FC<NavbarProps> = ({ showFullMenu = true }) => {
     { name: 'Docs', path: '/docs', icon: BookOpen },
     { name: 'History', path: '/history', icon: Clock },
     // Only show Subscribe link for non-pro users
-    ...(!isPro ? [{ name: 'Upgrade to Pro', path: '/subscribe', icon: Sparkles }] : []),
+    ...(!isPro ? [{ name: 'Upgrade to Pro', path: '/SubToPro', icon: Sparkles }] : []),
   ];
 
   useEffect(() => {

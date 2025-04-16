@@ -94,7 +94,8 @@ const Authentication = () => {
   };
   
   return (
-    <Layout showFullMenu={false}>
+    //showFullMenu={false}
+    <Layout >
       {/* Main Content */}
       <div className="flex-1 flex items-center justify-center px-6 py-12">
         <Card className="w-full max-w-md">
@@ -120,7 +121,7 @@ const Authentication = () => {
                 theme="outline"
                 size="large"
                 width="300" // Specify explicit width
-                height="50" // Specify explicit height
+                // height="50" // Specify explicit height
                 type="standard"
                 shape="rectangular"
               />
