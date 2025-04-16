@@ -203,15 +203,16 @@ const HomePage: React.FC = () => {
             </p>
             <div className="flex flex-col sm:flex-row items-center gap-3 justify-center md:justify-start">
               <Button
-                onClick={() => scrollToSection(detectionRef)}
-                className="w-full sm:w-auto bg-green-600 hover:bg-green-700 text-white font-medium px-4 sm:px-6 py-2.5 sm:py-3 rounded-md text-sm sm:text-base transition-all duration-200 flex items-center justify-center gap-2"
+                onClick={() => navigate('/detect')}
+                className="w-full cursor-pointer sm:w-auto bg-green-600 hover:bg-green-700 text-white font-medium px-4 sm:px-6 py-2.5 sm:py-3 rounded-md text-sm sm:text-base transition-all duration-200 flex items-center justify-center gap-2"
               >
                 Get Started
                 <ArrowRight className="w-4 h-4" />
               </Button>
               <Button
                 variant="outline"
-                className="w-full sm:w-auto bg-transparent hover:bg-green-50 text-green-800 font-medium px-4 sm:px-6 py-2.5 sm:py-3 rounded-md text-sm sm:text-base border border-green-300"
+                onClick={()=>navigate('/docs')}
+                className="w-full sm:w-auto bg-transparent hover:bg-green-50 text-green-800 font-medium px-4 sm:px-6 py-2.5 sm:py-3 rounded-md text-sm sm:text-base border cursor-pointer border-green-300"
               >
                 Learn More
               </Button>

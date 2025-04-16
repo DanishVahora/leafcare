@@ -35,7 +35,7 @@ export const Navbar: React.FC<NavbarProps> = ({ showFullMenu = true }) => {
     { name: 'Docs', path: '/docs', icon: BookOpen },
     { name: 'History', path: '/history', icon: Clock },
     // Only show Subscribe link for non-pro users
-    ...(!isPro ? [{ name: 'Upgrade to Pro', path: '/SubToPro', icon: Sparkles }] : []),
+    // ...(!isPro ? [{ name: 'Upgrade to Pro', path: '/SubToPro', icon: Sparkles }] : []),
   ];
 
   useEffect(() => {
@@ -165,6 +165,18 @@ export const Navbar: React.FC<NavbarProps> = ({ showFullMenu = true }) => {
                               <User className="h-5 w-5 text-green-600" />
                               <span>Profile Settings</span>
                             </a>
+                            
+                            {/* Add Upgrade to Pro button for non-pro users */}
+                            {!isPro && (
+                              <a
+                                href="/SubToPro"
+                                className="flex items-center space-x-3 px-3 py-2.5 text-gray-600 hover:bg-green-50 rounded-lg"
+                              >
+                                <Sparkles className="h-5 w-5 text-green-600" />
+                                <span>Upgrade to Pro</span>
+                              </a>
+                            )}
+                            
                             <button
                               onClick={logout}
                               className="w-full flex items-center space-x-3 px-3 py-2.5 text-gray-600 hover:bg-green-50 rounded-lg"
@@ -263,16 +275,29 @@ export const Navbar: React.FC<NavbarProps> = ({ showFullMenu = true }) => {
               ))}
 
               {user ? (
-                <button
-                  onClick={() => {
-                    setIsOpen(false);
-                    logout();
-                  }}
-                  className="w-full flex items-center space-x-3 px-3 py-3 text-red-500 hover:bg-green-50 rounded-lg"
-                >
-                  <LogOut className="h-6 w-6" />
-                  <span>Sign Out</span>
-                </button>
+                <>
+                  {/* Add Upgrade to Pro button for non-pro users in mobile menu */}
+                  {!isPro && (
+                    <a
+                      href="/SubToPro"
+                      className="flex items-center space-x-3 px-3 py-3 text-gray-600 hover:bg-green-50 rounded-lg transition-colors"
+                      onClick={() => setIsOpen(false)}
+                    >
+                      <Sparkles className="h-6 w-6 text-green-600" />
+                      <span>Upgrade to Pro</span>
+                    </a>
+                  )}
+                  <button
+                    onClick={() => {
+                      setIsOpen(false);
+                      logout();
+                    }}
+                    className="w-full flex items-center space-x-3 px-3 py-3 text-red-500 hover:bg-green-50 rounded-lg"
+                  >
+                    <LogOut className="h-6 w-6" />
+                    <span>Sign Out</span>
+                  </button>
+                </>
               ) : (
                 <div className="space-y-3 mt-6">
                   <a
