@@ -14,6 +14,7 @@ import HistoryPage from '@/pages/HistoryPage';
 import Privacy from '@/pages/Privacy';
 import Terms from '@/pages/Terms';
 import Contact from '@/pages/Contact';
+import NotFoundPage from '@/pages/NotFoundPage';
 
 export const AppRoute = () => {
   return (
@@ -72,7 +73,7 @@ export const AppRoute = () => {
       } />
       <Route path="/subscribe" element={<SubscriptionManager />} />
       {/* Not found */}
-      <Route path="*" element={<h1>Not Found</h1>} />
+      <Route path="*" element={<NotFoundPage/>} />
 
       <Route path="/history" element={
         // <ProtectedRoute>

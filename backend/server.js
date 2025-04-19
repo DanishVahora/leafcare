@@ -8,6 +8,7 @@ const helmet = require("helmet");
 const subscriptionRoutes = require('./routes/subscriptionRoutes');
 const { setupScheduledTasks } = require('./utils/scheduledTasks');
 const userRoutes = require('./routes/userRoutes');
+const historyRoutes = require('./routes/historyRoutes');
 
 // Load env vars
 
@@ -40,6 +41,7 @@ app.use(bodyParser.json());
 app.use('/api/auth', authRoutes);
 app.use('/api/subscriptions', subscriptionRoutes);
 app.use('/api/users', userRoutes); // Add this line
+app.use('/api/history', historyRoutes);
 
 // Set up scheduled tasks
 setupScheduledTasks();

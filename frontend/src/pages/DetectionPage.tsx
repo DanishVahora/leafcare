@@ -23,6 +23,7 @@ import {
 } from "lucide-react";
 import { motion } from "framer-motion";
 import { useDropzone } from "react-dropzone";
+import axios from 'axios';
 import { useFeatureAccess } from "@/hooks/useFeatureAccess";
 import { useAuth } from "@/context/AuthContext";
 import { UpgradePrompt } from "@/components/UpgradePrompt";
@@ -32,6 +33,7 @@ import jsPDF from "jspdf";
 import { ShareDialog } from "@/components/ShareDialog";
 import { useDetection } from "@/context/DetectionContext";
 import { useEffect, useCallback } from 'react';
+import api from '@/services/api';
 
 const fadeInUp = {
   hidden: { opacity: 0, y: 20 },
@@ -167,6 +169,27 @@ const DetectionPage: React.FC = () => {
       
       if (data && data.prediction) {
         setResults(data);
+        const treatmentInfo = await fetchTreatmentInfo(data.prediction.replace(/_/g, ' '));
+        
+        // Save to history if user is authenticated
+        if (isAuthenticated) {
+          try {
+            await api.post('/history', {
+              image: imageSrc,
+              prediction: {
+                disease: data.prediction,
+                confidence: data.confidence,
+                top_3_predictions: data.top_3_predictions
+              },
+              treatmentInfo
+            });
+            toast.success('Detection saved to history');
+          } catch (error) {
+            console.error('Failed to save history:', error);
+            toast.error('Failed to save to history');
+          }
+        }
+        
         await fetchTreatmentInfo(data.prediction.replace(/_/g, ' '));
         
         // Record usage based on authentication status
