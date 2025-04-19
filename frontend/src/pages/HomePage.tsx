@@ -13,7 +13,7 @@ import {
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import Layout from "../Layout/Layout";
-import {  useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -211,7 +211,7 @@ const HomePage: React.FC = () => {
               </Button>
               <Button
                 variant="outline"
-                onClick={()=>navigate('/docs')}
+                onClick={() => navigate('/docs')}
                 className="w-full sm:w-auto bg-transparent hover:bg-green-50 text-green-800 font-medium px-4 sm:px-6 py-2.5 sm:py-3 rounded-md text-sm sm:text-base border cursor-pointer border-green-300"
               >
                 Learn More
@@ -438,7 +438,8 @@ const HomePage: React.FC = () => {
       </section>
 
       {/* DISEASE DETECTION STEPS - NEW SECTION */}
-      <section ref={detectionRef} className="bg-gray-50 py-8 md:py-16 px-4 sm:px-6">
+      {/* DISEASE DETECTION STEPS - NEW SECTION */}
+      <section ref={detectionRef} className="bg-gray-50 py-8 md:py-16 px-4 sm:px-6 overflow-hidden">
         <motion.div
           className="max-w-6xl mx-auto"
           initial="hidden"
@@ -450,57 +451,73 @@ const HomePage: React.FC = () => {
             How to Detect Plant Diseases
           </motion.h2>
 
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-6 md:gap-8">
-            {detectionSteps.map((step, index) => (
-              <motion.div
-                key={step.title}
-                variants={fadeInUp}
-                custom={index}
-                className="relative"
-              >
-                <Card className="p-6 md:p-8 shadow-lg rounded-xl bg-white hover:shadow-xl transition-all h-full flex flex-col items-center text-center">
-                  <div className="mb-4 bg-green-50 p-4 rounded-full">{step.icon}</div>
-                  <h3 className="text-xl font-semibold text-green-700 mb-2">{step.title}</h3>
-                  <p className="text-gray-600 text-sm md:text-base">{step.description}</p>
+          {/* Interactive Timeline */}
+          <div className="relative py-12">
+            {/* Horizontal line for desktop */}
+            <div className="hidden md:block absolute left-0 right-0 h-1 bg-green-200 top-1/2 transform -translate-y-1/2 z-0" />
 
-                  {/* Number badge */}
-                  <div className="absolute -top-3 -left-3 w-8 h-8 rounded-full bg-green-600 flex items-center justify-center text-white font-bold">
+            {/* Vertical line for mobile */}
+            <div className="md:hidden absolute left-6 top-0 bottom-0 w-1 bg-green-200 z-0" />
+
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-8 md:gap-4">
+              {detectionSteps.map((step, index) => (
+                <motion.div
+                  key={step.title}
+                  variants={fadeInUp}
+                  custom={index}
+                  className="relative"
+                >
+                  {/* Mobile Timeline Node */}
+                  <div className="md:hidden absolute left-6 top-1/2 transform -translate-x-1/2 -translate-y-1/2 w-4 h-4 bg-green-600 rounded-full z-10" />
+
+                  {/* Desktop Timeline Node */}
+                  <div className="hidden md:block absolute left-1/2 top-0 transform -translate-x-1/2 -translate-y-12 w-6 h-6 bg-green-600 rounded-full z-10" />
+
+                  {/* Step Number - Desktop */}
+                  <div className="hidden md:flex absolute left-1/2 top-0 transform -translate-x-1/2 -translate-y-12 w-6 h-6 bg-green-600 rounded-full items-center justify-center text-white text-xs font-bold z-20">
                     {index + 1}
                   </div>
 
-                  {/* Arrow connecting to next step (except last) */}
-                  {index < detectionSteps.length - 1 && (
-                    <div className="hidden md:block absolute -right-4 top-1/2 transform -translate-y-1/2 z-10">
-                      <ArrowRight className="w-6 h-6 text-green-500" />
+                  {/* Content Card with Hover Animation */}
+                  <motion.div
+                    className="ml-12 md:ml-0 bg-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 h-full"
+                    whileHover={{
+                      y: -5,
+                      boxShadow: "0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)"
+                    }}
+                  >
+                    <div className="p-6">
+                      {/* Step Number - Mobile */}
+                      <div className="md:hidden flex items-center justify-center w-8 h-8 rounded-full bg-green-600 text-white font-bold mb-4">
+                        {index + 1}
+                      </div>
+
+                      {/* Icon with pulse animation */}
+                      <motion.div
+                        className="mx-auto mb-4 bg-green-50 w-16 h-16 rounded-full flex items-center justify-center"
+                        animate={{
+                          boxShadow: ['0 0 0 0 rgba(34, 197, 94, 0.4)', '0 0 0 10px rgba(34, 197, 94, 0)', '0 0 0 0 rgba(34, 197, 94, 0)'],
+                        }}
+                        transition={{
+                          repeat: Infinity,
+                          duration: 2,
+                          repeatDelay: index * 0.5
+                        }}
+                      >
+                        {step.icon}
+                      </motion.div>
+
+                      <h3 className="text-xl font-semibold text-green-700 mb-2 text-center">{step.title}</h3>
+                      <p className="text-gray-600 text-sm md:text-base text-center">{step.description}</p>
                     </div>
-                  )}
-                </Card>
-              </motion.div>
-            ))}
+                  </motion.div>
+                </motion.div>
+              ))}
+            </div>
           </div>
 
-          <motion.div
-            variants={fadeInUp}
-            className="mt-12 flex justify-center"
-          >
-            <Card className="p-6 max-w-2xl bg-green-50 border border-green-200 shadow-md rounded-xl">
-              <div className="flex gap-4 items-start">
-                <div className="mt-1 text-green-600">
-                  <AlertCircle className="w-6 h-6" />
-                </div>
-                <div>
-                  <h3 className="text-lg font-medium text-green-800 mb-2">Ready to Try It Yourself?</h3>
-                  <p className="text-green-700 mb-4">
-                    Use our interactive demo below to upload a plant image and see our AI in action.
-                    {!isSubscribed && " Premium features require a subscription."}
-                  </p>
-                  <Button className="bg-green-600 hover:bg-green-700 text-white" onClick={() => navigate('/detect')}>
-                    Try Demo Now
-                  </Button>
-                </div>
-              </div>
-            </Card>
-          </motion.div>
+          {/* Interactive Demo Card */}
+          
         </motion.div>
       </section>
 
@@ -517,7 +534,7 @@ const HomePage: React.FC = () => {
             Training Results
           </motion.h2>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 md:gap-8">
-            {[['17M+', 'Parameters'], ['10', 'Epochs'], ['98%', 'Accuracy']].map(([value, label], index) => (
+            {[['17M+', 'Parameters'], ['4', 'Epochs'], ['98%', 'Accuracy']].map(([value, label], index) => (
               <motion.div key={label} variants={fadeInUp} custom={index}>
                 <Card className="p-4 md:p-8 shadow-lg md:shadow-xl rounded-xl md:rounded-2xl bg-white hover:shadow-2xl transition-shadow text-center">
                   <div className="text-2xl md:text-4xl font-bold text-green-600 mb-1 md:mb-2">{value}</div>
@@ -529,50 +546,65 @@ const HomePage: React.FC = () => {
         </motion.div>
       </section>
 
-      
 
-      
 
-      
+
+
+
 
       {/* CALL TO ACTION */}
       <section className="py-8 md:py-16 px-4 sm:px-6 bg-white">
-        <motion.div
-          className="max-w-6xl mx-auto"
-          initial="hidden"
-          whileInView="visible"
-          viewport={{ once: true, amount: 0.2 }}
-          variants={fadeInUp}
-        >
-          <Card className="p-8 md:p-12 bg-gradient-to-r from-green-600 to-green-700 text-white rounded-2xl shadow-xl overflow-hidden relative">
-            <div className="relative z-10">
-              <h2 className="text-3xl md:text-4xl font-bold mb-4">Ready to Transform Your Plant Health Management?</h2>
-              <p className="text-lg md:text-xl mb-8 max-w-3xl">
-                Join thousands of farmers, researchers, and plant enthusiasts using our AI-powered solution to detect and treat plant diseases effectively.
-              </p>
-              <div className="flex flex-col sm:flex-row gap-4">
-                <Button
-                  className="bg-white text-green-700 hover:bg-gray-100 font-medium px-6 py-3 text-base"
-                  onClick={() => navigate('/detect')}
-                >
-                  Try It Now
-                </Button>
-                <Button
-                  variant="outline"
-                  className="border-white text-white hover:bg-green-700 font-medium px-6 py-3 text-base"
-                  onClick={() => {
-                    navigate('/SubToPro');
-                  }}
-                >
-                  View Plans
-                </Button>
+      <motion.div
+            variants={fadeInUp}
+            className="mt-12"
+          >
+            <Card className="p-6 md:p-8 max-w-3xl mx-auto bg-gradient-to-br from-green-50 to-green-100 border-none shadow-lg rounded-xl">
+              <div className="flex flex-col md:flex-row gap-6 items-center">
+                <div className="bg-white p-4 rounded-xl shadow-md">
+                  <motion.div
+                    animate={{
+                      scale: [1, 1.05, 1],
+                    }}
+                    transition={{
+                      repeat: Infinity,
+                      duration: 4,
+                      ease: "easeInOut"
+                    }}
+                  >
+                    <Camera className="w-12 h-12 text-green-600" />
+                  </motion.div>
+                </div>
+                <div className="flex-1">
+                  <h3 className="text-xl font-semibold text-green-800 mb-2">Ready to Try It Yourself?</h3>
+                  <p className="text-green-700 mb-4">
+                    Upload a plant image and watch our AI identify diseases in seconds.
+                    Get tailored treatment recommendations instantly.
+                  </p>
+                  <div className="flex gap-4">
+                    <Button
+                      className="bg-green-600 hover:bg-green-700 text-white flex items-center gap-2"
+                      onClick={() => navigate('/detect')}
+                    >
+                      Try Demo Now
+                      <motion.div
+                        animate={{ x: [0, 4, 0] }}
+                        transition={{ repeat: Infinity, duration: 1.5 }}
+                      >
+                        <ArrowRight className="w-5 h-5" />
+                      </motion.div>
+                    </Button>
+                    <Button
+                      variant="outline"
+                      className="border-green-600 text-green-700 hover:bg-green-100"
+                      onClick={() => navigate('/SubToPro')}
+                    >
+                      View Plans
+                    </Button>
+                  </div>
+                </div>
               </div>
-            </div>
-            {/* Decorative elements */}
-            <div className="absolute top-0 right-0 w-64 h-64 bg-white opacity-10 rounded-full -mr-16 -mt-16"></div>
-            <div className="absolute bottom-0 left-0 w-40 h-40 bg-white opacity-10 rounded-full -ml-10 -mb-10"></div>
-          </Card>
-        </motion.div>
+            </Card>
+          </motion.div>
       </section>
     </Layout>
   );
