@@ -36,7 +36,8 @@ const app = express();
 //   exposedHeaders: ["set-cookie"]
 
 // }));
-const allowedOrigins = ["http://localhost:3000", "http://localhost:5173", "http://localhost:5174", "https://leafcare-production.up.railway.app"];
+const allowedOrigins = ["http://localhost:3000", "http://localhost:5173", "http://localhost:5174", "https://leafcare-production.up.railway.app",  "https://leafcare-production-1ed8.up.railway.app" // 👈 ADD THIS!
+];
 app.use(cors({
   origin: function (origin, callback) {
     if (!origin || allowedOrigins.includes(origin)) {
