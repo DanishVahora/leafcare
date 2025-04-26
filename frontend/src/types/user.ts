@@ -12,6 +12,7 @@ export interface User {
   lastName: string;
   email: string;
   photo?: string;
+  phone?: string;
   role: 'user' | 'pro' | 'admin';
   usageStats: UsageStats;
   createdAt: string;

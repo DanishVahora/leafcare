@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { motion,  useScroll, useTransform } from "framer-motion";
 import { CheckCircle, ArrowRight, ShieldCheck, Gift, Clock, Loader2, Leaf, Sparkles } from "lucide-react";
-import { BarChart3, FileText, History, Headset, Code, Scan } from "lucide-react";
 import Layout from "../Layout/Layout";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -14,13 +13,39 @@ import { loadRazorpayScript } from "@/lib/razorpay";
 import { toast } from "sonner";
 import { useAuth } from "@/context/AuthContext";
 import { useNavigate } from "react-router-dom";
-import { PaymentVerificationData } from "@/types/subscription";
+import { 
+  RazorpayResponse, 
+  PaymentVerificationData,
+} from "@/types/subscription";
 import { Shield } from 'lucide-react';
-
+interface RazorpayOptions {
+  key: string;
+  amount: number;
+  currency: string;
+  name: string;
+  description: string;
+  order_id: string;
+  handler: (response: RazorpayResponse) => void;
+  prefill: {
+    name: string;
+    email: string;
+    contact: string;
+  };
+  theme: {
+    color: string;
+  };
+  modal: {
+    ondismiss: () => void;
+  };
+}
 declare global {
   interface Window {
-    Razorpay: any;
-  }
+    Razorpay: {
+      new (options: RazorpayOptions): {
+        open: () => void;
+      };
+      }
+      }
 }
 
 const ScrollProgress = () => {
@@ -49,7 +74,7 @@ const SubscribePro: React.FC = () => {
   const { user, refreshUserData } = useAuth();
   const navigate = useNavigate();
   const isPro = user && (user.role === 'pro' || user.role === 'admin');
-
+  
   useEffect(() => {
     const handleScroll = () => {
       const totalScroll = document.documentElement.scrollTop || document.body.scrollTop;
@@ -62,32 +87,26 @@ const SubscribePro: React.FC = () => {
   }, []);
 
   const handlePayment = async () => {
-    if (!email) {
-      toast({
-        title: "Email Required",
-        description: "Please enter your email to continue",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    setIsLoading(true);
-    setPaymentError(null);
-
-    try {
-      // 1. Load Razorpay SDK
-      await loadRazorpayScript();
-
-      if (!window.Razorpay) {
-        throw new Error("Razorpay SDK not available");
+      if (!email) {
+        toast.error("Please enter your email to continue");
+        return;
       }
-
-      // 2. Create order on backend
-      const plan = paymentPeriod;
-      const orderData = await createOrder(plan, discountApplied ? couponCode : undefined);
-      
-      console.log("Order created:", orderData);
-      
+  
+      setIsLoading(true);
+      setPaymentError(null);
+  
+      try {
+        // Load Razorpay SDK
+        await loadRazorpayScript();
+  
+        if (!window.Razorpay) {
+          throw new Error("Razorpay SDK not available");
+        }
+  
+        // Create order
+        const plan = paymentPeriod;
+        const orderData = await createOrder(plan, discountApplied ? couponCode : undefined);
+        
       // 3. Setup Razorpay payment options
       const options = {
         key: import.meta.env.VITE_RAZORPAY_KEY_ID,
@@ -96,11 +115,9 @@ const SubscribePro: React.FC = () => {
         name: "LeafCare Pro",
         description: `${paymentPeriod === "monthly" ? "Monthly" : "Annual"} Subscription`,
         order_id: orderData.orderId,
-        handler: async function(response: any) {
-          console.log("Payment successful:", response);
-          
+        handler: async function(response: RazorpayResponse) {
           try {
-            // 4. Verify payment with backend
+            // Verify payment with backend
             const verificationData: PaymentVerificationData = {
               razorpay_payment_id: response.razorpay_payment_id,
               razorpay_order_id: response.razorpay_order_id,
@@ -109,27 +126,27 @@ const SubscribePro: React.FC = () => {
               couponCode: discountApplied ? couponCode : undefined
             };
             
-            // Send verification data to backend
-            const result = await verifyPayment(verificationData);
-            console.log("Payment verified:", result);
-            
-            // 5. Update user status and show success
-            await refreshUserData();
-            
-            toast({
-              title: "Success!",
-              description: "Your subscription has been activated successfully",
-            });
-            
-            // Redirect to dashboard or subscription success page
-            navigate("/dashboard");
+            const verificationResponse = await verifyPayment(verificationData);
+
+            if (verificationResponse.success) {
+              // Update user data
+              await refreshUserData();
+              
+              toast.success("Payment verified successfully!", {
+                description: "Your subscription has been activated"
+              });
+              
+              // Redirect to dashboard
+              navigate("/dashboard");
+            } else {
+              throw new Error("Payment verification failed");
+            }
           } catch (verifyError) {
             console.error("Verification failed:", verifyError);
             setPaymentError("Payment was processed but verification failed. Please contact support.");
-            toast({
-              title: "Verification Failed",
-              description: "Your payment was processed but we couldn't verify it. Please contact support.",
-              variant: "destructive"
+            
+            toast.error("Verification Failed", {
+              description: "Your payment was processed but we couldn't verify it. Please contact support."
             });
           }
         },
@@ -150,16 +167,17 @@ const SubscribePro: React.FC = () => {
       };
       
       // 6. Open Razorpay checkout
-      const razorpayInstance = new window.Razorpay(options);
+     const razorpayInstance = new window.Razorpay(options);
       razorpayInstance.open();
+      
     } catch (error) {
       console.error("Payment initialization error:", error);
       setPaymentError("Payment initialization failed. Please try again.");
-      toast({
-        title: "Payment Failed",
-        description: "There was an error starting the payment process. Please try again.",
-        variant: "destructive"
+      
+      toast.error("Payment Failed", {
+        description: "There was an error starting the payment process. Please try again."
       });
+      
       setIsLoading(false);
     }
   };
@@ -196,14 +214,7 @@ const SubscribePro: React.FC = () => {
       description: "Integrate our AI directly into your own applications"
     }
   ];
-  const benefitIcons = [
-    <Scan className="w-6 h-6 text-green-600" />,
-    <BarChart3 className="w-6 h-6 text-green-600" />,
-    <FileText className="w-6 h-6 text-green-600" />,
-    <History className="w-6 h-6 text-green-600" />,
-    <Headset className="w-6 h-6 text-green-600" />,
-    <Code className="w-6 h-6 text-green-600" />,
-  ];
+  
 
   const planDetails = {
     monthly: {
@@ -247,16 +258,7 @@ const SubscribePro: React.FC = () => {
     }
   };
 
-  const staggerItems = {
-    hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: {
-        staggerChildren: 0.2,
-        delayChildren: 0.3
-      }
-    }
-  };
+  
 
   // const slideUp = {
   //   hidden: { height: 0, opacity: 0 },

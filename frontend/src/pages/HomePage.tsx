@@ -6,9 +6,7 @@ import {
   Camera,
   Upload,
   Check,
-  AlertCircle,
   Info,
-  Lock,
   Leaf
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -25,17 +23,13 @@ import {
 } from "@/components/ui/tabs";
 import landingImg from '../assets/landing-img.jpeg';
 // import { useScroll } from "@studio-freight/react-lenis";
-import Lenis from "@studio-freight/lenis";
 
 const HomePage: React.FC = () => {
   const navigate = useNavigate();
   const [scrollProgress, setScrollProgress] = useState(0);
   const [isAboutExpanded, setIsAboutExpanded] = useState(false);
   const [isUseExpanded, setIsUseExpanded] = useState(false);
-  const [isPlanExpanded, setIsPlanExpanded] = useState(false);
-  const [isSubscribed, setIsSubscribed] = useState(false);
   const detectionRef = useRef<HTMLDivElement>(null);
-  const subscriptionRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -47,15 +41,7 @@ const HomePage: React.FC = () => {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  const scrollToSection = (ref: React.RefObject<HTMLDivElement>) => {
-    if (ref.current) {
-      const lenis = new Lenis()
-      lenis.scrollTo(ref.current, {
-        offset: -100,
-        duration: 1.5,
-      })
-    }
-  };
+  
 
   const fadeInUp = {
     hidden: { opacity: 0, y: 20 },
@@ -99,51 +85,7 @@ const HomePage: React.FC = () => {
     }
   ];
 
-  const subscriptionPlans = [
-    {
-      title: "Free",
-      price: "$0",
-      period: "forever",
-      features: [
-        "Basic disease detection",
-        "5 detections per day",
-        "General treatment advice",
-        "Limited plant species"
-      ],
-      isRecommended: false,
-      buttonText: "Get Started"
-    },
-    {
-      title: "Premium",
-      price: "$9.99",
-      period: "per month",
-      features: [
-        "Unlimited detections",
-        "Detailed treatment guides",
-        "All supported plant species",
-        "Disease progression tracking",
-        "Email notifications",
-        "Export reports"
-      ],
-      isRecommended: true,
-      buttonText: "Subscribe Now"
-    },
-    {
-      title: "Enterprise",
-      price: "Custom",
-      period: "per organization",
-      features: [
-        "All Premium features",
-        "API access",
-        "Custom model training",
-        "Advanced analytics",
-        "Multi-user access",
-        "24/7 priority support"
-      ],
-      isRecommended: false,
-      buttonText: "Contact Us"
-    }
-  ];
+  
 
   const useCases = [
     {
@@ -163,9 +105,7 @@ const HomePage: React.FC = () => {
     }
   ];
 
-  const toggleSubscription = () => {
-    setIsSubscribed(!isSubscribed);
-  };
+  
 
   return (
     <Layout>

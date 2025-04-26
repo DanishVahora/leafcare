@@ -1,8 +1,8 @@
 import React, { useRef, useState, useEffect } from 'react';
 import Layout from '@/Layout/Layout';
 import emailjs from '@emailjs/browser';
-import { Send, CheckCircle, MapPin, Phone, Mail, Clock, AlertCircle, ArrowRight } from 'lucide-react';
-import { motion, AnimatePresence } from "framer-motion";
+import { Send, CheckCircle, MapPin, Phone, Mail, AlertCircle, ArrowRight } from 'lucide-react';
+import { motion } from "framer-motion";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 

@@ -1,4 +1,3 @@
-import React from 'react';
 import {
   Dialog,
   DialogContent,
@@ -7,7 +6,7 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Mail, MessageCircle, Copy, Check, X } from "lucide-react";
+import { Mail, MessageCircle, Copy, Check } from "lucide-react";
 
 interface ShareDialogProps {
   open: boolean;
@@ -26,7 +25,6 @@ interface ShareDialogProps {
 
 export function ShareDialog({ open, onOpenChange, onShare, copied, resultData }: ShareDialogProps) {
   const confidencePercentage = Math.round(resultData.confidence * 100);
-  const shareText = `Analysis Results: ${resultData.disease} (${confidencePercentage}% confidence)`;
   
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>

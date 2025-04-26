@@ -16,8 +16,11 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isLoading, setIsLoading] = useState(true); // Start with loading true
+  const [isAuthenticated, setIsAuthenticated] = useState(() => {
+    // Initialize auth state based on token existence
+    return !!localStorage.getItem('token');
+  });
 
   // Load user data from token
   const loadUser = useCallback(async () => {
@@ -25,6 +28,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     
     if (!token) {
       setIsLoading(false);
+      setIsAuthenticated(false);
       return;
     }
     
@@ -38,10 +42,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       console.error('Error loading user', error);
       localStorage.removeItem('token');
       delete api.defaults.headers.common['Authorization'];
+      setIsAuthenticated(false);
+      setUser(null);
     } finally {
       setIsLoading(false);
     }
   }, []);
+
 
   // Load user on mount
   useEffect(() => {

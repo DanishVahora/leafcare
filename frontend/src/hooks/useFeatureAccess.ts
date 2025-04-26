@@ -110,6 +110,7 @@ export const useFeatureAccess = () => {
     canAccessFeature,
     checkFeatureAccess,
     resetGuestUsage,
-    usageCount
+    usageCount,
+    setUsageCount
   };
 };

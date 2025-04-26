@@ -23,7 +23,6 @@ import {
 } from "lucide-react";
 import { motion } from "framer-motion";
 import { useDropzone } from "react-dropzone";
-import axios from 'axios';
 import { useFeatureAccess } from "@/hooks/useFeatureAccess";
 import { useAuth } from "@/context/AuthContext";
 import { UpgradePrompt } from "@/components/UpgradePrompt";
@@ -70,7 +69,6 @@ const DetectionPage: React.FC = () => {
     setScanInProgress,
     setCopied,
     setShareDialogOpen,
-    resetState
   } = useDetection();
 
   // Keep your existing useAuth, useFeatureAccess hooks and other state
@@ -228,9 +226,7 @@ const DetectionPage: React.FC = () => {
   };
 
   // Add a reset function that can be called if needed
-  const resetScan = () => {
-    resetState();
-  };
+  
 
   // Modify onDrop to use the new access check
   const onDrop = useCallback(async (acceptedFiles: File[]) => {
@@ -420,6 +416,7 @@ Use straightforward language appropriate for farmers with basic education. Prior
       setTreatmentInfo(parsedTreatment);
     } catch (err) {
       setTreatmentError("Failed to fetch treatment information. Please try again.");
+      console.error("Error fetching treatment info:", err);
     } finally {
       setLoadingTreatment(false);
     }
@@ -521,27 +518,27 @@ Use straightforward language appropriate for farmers with basic education. Prior
 
   // Optional: Add a "Scan Another" button after results are displayed
   // This button would only be visible for users who have access
-  const renderScanAnotherButton = () => {
-    if (!results) return null;
+  // const renderScanAnotherButton = () => {
+  //   if (!results) return null;
     
-    const hasAccess = isAuthenticated ? 
-      (user?.role === 'pro' || (user?.usageStats?.scanThisMonth || 0) < 5) : 
-      usageCount < 1;
+  //   const hasAccess = isAuthenticated ? 
+  //     (user?.role === 'pro' || (user?.usageStats?.scanThisMonth || 0) < 5) : 
+  //     usageCount < 1;
     
-    if (!hasAccess) return null;
+  //   if (!hasAccess) return null;
     
-    return (
-      <div className="text-center mt-8">
-        <Button
-          onClick={resetScan}
-          className="gap-2 bg-green-600 hover:bg-green-700"
-        >
-          <TestTube2 className="w-4 h-4" />
-          Scan Another Plant
-        </Button>
-      </div>
-    );
-  };
+  //   return (
+  //     <div className="text-center mt-8">
+  //       <Button
+  //         onClick={resetScan}
+  //         className="gap-2 bg-green-600 hover:bg-green-700"
+  //       >
+  //         <TestTube2 className="w-4 h-4" />
+  //         Scan Another Plant
+  //       </Button>
+  //     </div>
+  //   );
+  // };
 
   // Function to render treatment info with enhanced UI
   const renderTreatmentInfo = () => {

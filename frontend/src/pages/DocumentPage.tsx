@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useRef, useState, useEffect } from "react";
 import { Layout } from "../Layout/Layout";
 import { Card } from "@/components/ui/card";
 import Chart from "chart.js/auto";
@@ -24,6 +24,11 @@ import { motion } from "framer-motion";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
+interface SectionProps {
+  title: string;
+  icon: React.ReactNode;
+  content: React.ReactNode;
+}
 const fadeInUp = {
   hidden: { opacity: 0, y: 20 },
   visible: { opacity: 1, y: 0, transition: { duration: 0.6 } },
@@ -40,10 +45,10 @@ const containerAnimation = {
 };
 
 const DocumentPage = () => {
-  const accuracyChartRef = useRef(null);
-  const lossChartRef = useRef(null);
-  const [activeTab, setActiveTab] = useState("architecture");
-
+  const accuracyChartRef = useRef<HTMLCanvasElement | null>(null);
+  const lossChartRef = useRef<HTMLCanvasElement | null>(null);
+  const [, setActiveTab] = useState("architecture");
+  
   useEffect(() => {
     // Accuracy Chart
     if (accuracyChartRef.current) {
@@ -152,21 +157,30 @@ const DocumentPage = () => {
     }
   }, [lossChartRef.current]);
 
-  const renderSection = (title, icon, content) => (
+  const renderSection = (props: SectionProps) => (
     <motion.div 
       variants={fadeInUp}
       className="mb-10"
     >
       <div className="flex items-center gap-3 mb-4">
         <div className="p-2 rounded-lg bg-green-100 text-green-700">
-          {icon}
+          {props.icon}
         </div>
-        <h2 className="text-2xl font-bold text-green-800">{title}</h2>
+        <h2 className="text-2xl font-bold text-green-800">{props.title}</h2>
       </div>
-      {content}
+      {props.content}
     </motion.div>
   );
-
+  
+// Update section rendering
+const renderTabContent = (title: string, icon: React.ReactNode, content: React.ReactNode) => {
+  const sectionProps: SectionProps = {
+    title,
+    icon,
+    content
+  };
+  return renderSection(sectionProps);
+};
   return (
     <Layout>
       <div className="container mx-auto px-4 sm:px-6 py-6 sm:py-10">
@@ -211,7 +225,7 @@ const DocumentPage = () => {
             </TabsList>
 
             <TabsContent value="architecture" className="mt-6">
-              {renderSection(
+              {renderTabContent(
                 "System Architecture",
                 <Layers className="w-6 h-6" />,
                 <Card className="p-6 shadow-lg">
@@ -300,9 +314,10 @@ const DocumentPage = () => {
             </TabsContent>
 
             <TabsContent value="training" className="mt-6">
-              {renderSection(
-                "Training Methodology",
-                <BrainCircuit className="w-6 h-6" />,
+               {renderSection({
+                  title: "Training Methodology",
+                  icon: <BrainCircuit className="w-6 h-6" />,
+                  content:(
                 <Card className="p-6 shadow-lg">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                     <div>
@@ -382,13 +397,16 @@ const DocumentPage = () => {
                     </div>
                   </div>
                 </Card>
+                  )
+                }
               )}
             </TabsContent>
 
             <TabsContent value="workflow" className="mt-6">
-              {renderSection(
-                "Workflow Steps",
-                <Workflow className="w-6 h-6" />,
+              {renderSection({
+                title:"Workflow Steps",
+               icon: <Workflow className="w-6 h-6" />,
+               content:(
                 <Card className="p-6 shadow-lg">
                   <div className="relative">
                     <div className="absolute left-6 inset-y-0 w-1 bg-green-100 rounded-full"></div>
@@ -474,13 +492,15 @@ const DocumentPage = () => {
                     </div>
                   </div>
                 </Card>
-              )}
+               )
+              })}
             </TabsContent>
 
             <TabsContent value="features" className="mt-6">
-              {renderSection(
-                "Project Features & Use Cases",
-                <Lightbulb className="w-6 h-6" />,
+              {renderSection({
+                 title:"Project Features & Use Cases",
+                icon:<Lightbulb className="w-6 h-6" />,
+                content:(
                 <Card className="p-6 shadow-lg">
                   <div className="grid md:grid-cols-2 gap-8">
                     <div>
@@ -587,7 +607,8 @@ const DocumentPage = () => {
                     </div>
                   </div>
                 </Card>
-              )}
+               )
+              })}
             </TabsContent>
           </Tabs>
 
