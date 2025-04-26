@@ -23,18 +23,29 @@ const app = express();
 // Middleware
 
 
-app.use(cors({
-  origin: ["http://localhost:3000", "http://localhost:5173", "http://localhost:5174","https://leafcare-production.up.railway.app"], // Allow both ports
-  credentials: true, 
-  allowedHeaders: [
-    "Content-Type", 
-    "Authorization",
-    "Access-Control-Allow-Origin",
-    "Access-Control-Allow-Credentials"
-  ],
-  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-  exposedHeaders: ["set-cookie"]
+// app.use(cors({
+//   origin: ["http://localhost:3000", "http://localhost:5173", "http://localhost:5174","https://leafcare-production.up.railway.app"], // Allow both ports
+//   credentials: true, 
+//   allowedHeaders: [
+//     "Content-Type", 
+//     "Authorization",
+//     "Access-Control-Allow-Origin",
+//     "Access-Control-Allow-Credentials"
+//   ],
+//   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+//   exposedHeaders: ["set-cookie"]
 
+// }));
+const allowedOrigins = ["http://localhost:3000", "http://localhost:5173", "http://localhost:5174", "https://leafcare-production.up.railway.app"];
+app.use(cors({
+  origin: function (origin, callback) {
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
+  credentials: true,
 }));
 
 app.options('*', cors());

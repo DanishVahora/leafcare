@@ -5,9 +5,8 @@ const api = axios.create({
   baseURL: API_BASE_URL,
   headers: {
     'Content-Type': 'application/json',
-    withCredentials: true,
-
-  }
+  },
+  withCredentials: true,
 });
 
 // Add authorization header to all requests if token exists
