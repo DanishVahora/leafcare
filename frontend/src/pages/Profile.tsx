@@ -2,12 +2,11 @@ import { useState, useEffect, ChangeEvent } from 'react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
-import { Profile, ProfileUpdateRequest } from '@/types/profile.types';
+import { Profile } from '@/types/profile.types';
 import { profileService } from '@/services/profile.service';
-import { Loader2, User, Camera, Mail, Phone, MapPin, FileText, Shield } from 'lucide-react';
+import { Loader2, User, Camera, Mail, Phone, FileText, Shield } from 'lucide-react';
 import Layout from '@/Layout/Layout';
 
 export default function ProfilePage() {
@@ -97,25 +96,32 @@ export default function ProfilePage() {
                 <div className="relative group">
                   <Avatar className="h-32 w-32 border-4 border-green-100">
                     {profile?.photo ? (
-                      <AvatarImage src={profile.photo} alt={`${profile.firstName} ${profile.lastName}`} />
+                      <AvatarImage 
+                        src={profile.photo} 
+                        alt={`${profile.firstName} ${profile.lastName}`}
+                        className="object-cover w-full h-full"
+                      />
                     ) : (
-                      <AvatarFallback className="bg-green-200 text-green-700 text-2xl">
-                        {profile?.firstName?.charAt(0)}
+                      <AvatarFallback 
+                        className="bg-green-200 text-green-700 text-2xl flex items-center justify-center"
+                      >
+                        {profile?.firstName ? profile.firstName[0].toUpperCase() : '?'}
                       </AvatarFallback>
                     )}
                   </Avatar>
-                  <div className="absolute bottom-0 right-0">
-                    <label htmlFor="profile-image" className="cursor-pointer p-2 bg-white rounded-full border border-green-200 text-green-600 hover:bg-green-50 transition-colors">
-                      <Camera className="h-5 w-5" />
-                      <Input
-                        type="file"
-                        id="profile-image"
-                        accept="image/*"
-                        onChange={handleImageUpload}
-                        disabled={imageLoading}
-                        className="hidden"
-                      />
-                    </label>
+                  <div className="absolute -bottom-3 -right-3">
+                  <label htmlFor="profile-image" className="cursor-pointer bg-white rounded-full border border-green-200 text-green-600 hover:bg-green-50 transition-colors shadow-sm p-0 flex items-center justify-center">
+                <Camera className="h-4 w-4" />
+                <Input
+                    type="file"
+                    id="profile-image"
+                    accept="image/*"
+                    onChange={handleImageUpload}
+                    disabled={imageLoading}
+                    className="hidden"
+                />
+                </label>
+
                   </div>
                 </div>
                 {imageLoading && (
@@ -216,7 +222,7 @@ export default function ProfilePage() {
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                   <div className="bg-white p-3 rounded border border-green-100">
                     <p className="text-sm text-gray-500">Scans This Month</p>
-                    <p className="text-xl font-medium text-gray-800">{profile?.usageStats?.scansThisMonth || 0}</p>
+                    <p className="text-xl font-medium text-gray-800">{profile?.usageStats?.scanThisMonth || 0}</p>
                   </div>
                   <div className="bg-white p-3 rounded border border-green-100">
                     <p className="text-sm text-gray-500">Total Scans</p>

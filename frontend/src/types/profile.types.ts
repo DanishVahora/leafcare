@@ -1,3 +1,11 @@
+export interface UsageStats {
+  totalScans: number;
+  scanThisMonth: number;
+  lastScanDate: string | null;
+  exportsCount: number;
+  apiCallsCount: number;
+}
+
 export interface Profile {
   _id: string;
   firstName: string;
@@ -11,10 +19,7 @@ export interface Profile {
 }
 
 export interface ProfileUpdateRequest {
-  firstName: string;
-  lastName: string;
+  firstName?: string;
+  lastName?: string;
   phone?: string;
-  address?: string;
-  profileImage?: string;
-  bio?: string;
 } 

@@ -19,6 +19,13 @@ interface NavbarProps {
   showFullMenu?: boolean;
 }
 
+const getPhotoUrl = (photoUrl?: string) => {
+  if (!photoUrl) return '/user-profile.svg';
+  console.log(photoUrl);
+  if (photoUrl.startsWith('http')) return photoUrl;
+  return `${process.env.NEXT_PUBLIC_API_URL}${photoUrl}`;
+};
+
 export const Navbar: React.FC<NavbarProps> = ({ showFullMenu = true }) => {
   const { user, logout } = useAuth();
   const [isOpen, setIsOpen] = useState(false);
@@ -130,9 +137,9 @@ export const Navbar: React.FC<NavbarProps> = ({ showFullMenu = true }) => {
                       <div className="relative">
                         <div className="absolute inset-0 rounded-full opacity-0 group-hover:opacity-100 transition-opacity" />
                         <img
-                          src={ '/user-profile.svg'}
-                          alt="Profile"
-                          className="h-8 w-8 lg:h-9 lg:w-9 rounded-full border-2 border-green-100 group-hover:border-transparent transition-all"
+                          src={getPhotoUrl(user.photo)}
+                          alt={`${user.firstName} ${user.lastName}`}
+                          className="h-8 w-8 lg:h-9 lg:w-9 rounded-full border-2 border-green-100 group-hover:border-transparent transition-all object-cover"
                         />
                       </div>
                     </motion.button>
@@ -146,16 +153,25 @@ export const Navbar: React.FC<NavbarProps> = ({ showFullMenu = true }) => {
                           className="absolute right-0 mt-2 w-64 bg-white rounded-xl shadow-lg border border-green-100"
                         >
                           <div className="p-4 bg-gradient-to-r from-green-50 to-emerald-50 border-b border-green-100">
-                            <div className="text-sm font-medium text-green-800">
-                              {user.firstName} {user.lastName}
-                              {isPro && (
-                                <Badge variant="outline" className="ml-2 bg-green-100 text-green-800">
-                                  <Sparkles className="w-3 h-3 mr-1" />
-                                  PRO
-                                </Badge>
-                              )}
+                            <div className="flex items-center space-x-3">
+                              <img
+                                src={getPhotoUrl(user.photo)}
+                                alt={`${user.firstName} ${user.lastName}`}
+                                className="h-10 w-10 rounded-full border-2 border-green-600 object-cover"
+                              />
+                              <div>
+                                <div className="text-lg font-medium text-green-800">
+                                  {user.firstName} {user.lastName}
+                                  {isPro && (
+                                    <Badge variant="outline" className="ml-2 bg-green-100 text-green-800">
+                                      <Sparkles className="w-3 h-3 mr-1" />
+                                      PRO
+                                    </Badge>
+                                  )}
+                                </div>
+                                <div className="text-sm text-green-600">{user.email}</div>
+                              </div>
                             </div>
-                            <div className="text-xs text-green-600">{user.email}</div>
                           </div>
                           <div className="p-2">
                             <a
@@ -242,9 +258,9 @@ export const Navbar: React.FC<NavbarProps> = ({ showFullMenu = true }) => {
                 <div className="pb-4 border-b border-green-100">
                   <div className="flex items-center space-x-3">
                     <img
-                      src={user.photo || '/user-profile.svg'}
-                      alt="Profile"
-                      className="h-10 w-10 rounded-full border-2 border-green-600"
+                      src={getPhotoUrl(user.photo)}
+                      alt={`${user.firstName} ${user.lastName}`}
+                      className="h-10 w-10 rounded-full border-2 border-green-600 object-cover"
                     />
                     <div>
                       <div className="text-lg font-medium text-green-800">
@@ -259,61 +275,6 @@ export const Navbar: React.FC<NavbarProps> = ({ showFullMenu = true }) => {
                       <div className="text-sm text-green-600">{user.email}</div>
                     </div>
                   </div>
-                </div>
-              )}
-
-              {NAV_LINKS.map((link) => (
-                <a
-                  key={link.name}
-                  href={link.path}
-                  className="flex items-center space-x-3 px-3 py-3 text-gray-600 hover:bg-green-50 rounded-lg transition-colors"
-                  onClick={() => setIsOpen(false)}
-                >
-                  <link.icon className="h-6 w-6 text-green-600" />
-                  <span>{link.name}</span>
-                </a>
-              ))}
-
-              {user ? (
-                <>
-                  {/* Add Upgrade to Pro button for non-pro users in mobile menu */}
-                  {!isPro && (
-                    <a
-                      href="/SubToPro"
-                      className="flex items-center space-x-3 px-3 py-3 text-gray-600 hover:bg-green-50 rounded-lg transition-colors"
-                      onClick={() => setIsOpen(false)}
-                    >
-                      <Sparkles className="h-6 w-6 text-green-600" />
-                      <span>Upgrade to Pro</span>
-                    </a>
-                  )}
-                  <button
-                    onClick={() => {
-                      setIsOpen(false);
-                      logout();
-                    }}
-                    className="w-full flex items-center space-x-3 px-3 py-3 text-red-500 hover:bg-green-50 rounded-lg"
-                  >
-                    <LogOut className="h-6 w-6" />
-                    <span>Sign Out</span>
-                  </button>
-                </>
-              ) : (
-                <div className="space-y-3 mt-6">
-                  <a
-                    href="/auth"
-                    className="w-full flex items-center justify-center space-x-2 px-4 py-3 text-green-600 hover:bg-green-50 rounded-lg border border-green-100"
-                    onClick={() => setIsOpen(false)}
-                  >
-                    <span>Login</span>
-                  </a>
-                  <a
-                    href="/signup"
-                    className="w-full flex items-center justify-center space-x-2 px-4 py-3 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-lg"
-                    onClick={() => setIsOpen(false)}
-                  >
-                    <span>Sign Up</span>
-                  </a>
                 </div>
               )}
             </div>
