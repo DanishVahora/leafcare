@@ -15,7 +15,7 @@ import Privacy from '@/pages/Privacy';
 import Terms from '@/pages/Terms';
 import Contact from '@/pages/Contact';
 import NotFoundPage from '@/pages/NotFoundPage';
-
+import ProfilePage from '@/pages/Profile';
 export const AppRoute = () => {
   return (
     <Routes>
@@ -78,6 +78,11 @@ export const AppRoute = () => {
       <Route path="/history" element={
         // <ProtectedRoute>
         <HistoryPage />
+        // </ProtectedRoute>
+      } />
+      <Route path="/profile" element={
+        // <ProtectedRoute>
+        <ProfilePage />
         // </ProtectedRoute>
       } />
     </Routes>

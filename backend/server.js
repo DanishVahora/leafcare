@@ -19,7 +19,7 @@ app.use(cors({
   origin: ["http://localhost:3000", "http://localhost:5173", "https://leafcare-production.up.railway.app"],
   credentials: true,
   allowedHeaders: ["Content-Type", "Authorization"],
-  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"]
+  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS","PATCH"]
 }));
 app.use(helmet({
   crossOriginOpenerPolicy: { policy: "same-origin-allow-popups" },
