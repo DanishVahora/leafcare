@@ -154,11 +154,13 @@ const DetectionPage: React.FC = () => {
       const blob = await fetch(imageSrc!).then(r => r.blob());
       formData.append('file', blob, 'image.jpg');
 
-      const response = await fetch(
-        "http://localhost:8000/predict",
-        { method: 'POST', body: formData }
-      );
-
+            const response = await fetch("https://plant-new-model.kindmushroom-20b564e6.centralindia.azurecontainerapps.io/predict/", {
+              method: "POST",
+              body: formData,
+              headers: {
+                "Accept": "application/json", // Don't set Content-Type manually!
+              },
+            });
       if (!response.ok) {
         throw new Error('Failed to get prediction');
       }
